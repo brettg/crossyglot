@@ -5,7 +5,6 @@ require 'puzrub'
 
 include Puzrub
 
-
 module TestfileHelper
   TESTFILE_DIR = File.expand_path('../input-files', __FILE__)
   def testfile_path(filename)

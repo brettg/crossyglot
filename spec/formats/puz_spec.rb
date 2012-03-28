@@ -52,6 +52,46 @@ describe Formats::Puz do
         it 'should set #notes' do
           @puzzle.notes.should be_nil
         end
+        it 'should set #cells' do
+          @puzzle.cells.should_not be_nil
+          @puzzle.cells.size.should == 225
+
+          first_cell = @puzzle.cells.first
+          first_cell.solution.should == 'T'
+          first_cell.should_not be_black
+          first_cell.down_number.should == 1
+          first_cell.across_number.should == 1
+
+          second_cell = @puzzle.cells[1]
+          second_cell.solution.should == 'A'
+          second_cell.should_not be_black
+          second_cell.down_number.should == 2
+          second_cell.across_number.should be_nil
+
+          first_black = @puzzle.cells[4]
+          first_black.solution.should be_nil
+          first_black.should be_black
+          first_black.down_number.should be_nil
+          first_black.across_number.should be_nil
+
+          first_across_only = @puzzle.cells[15]
+          first_across_only.solution.should == 'A'
+          first_across_only.should_not be_black
+          first_across_only.down_number.should be_nil
+          first_across_only.across_number.should == 14
+
+          first_numberless = @puzzle.cells[16]
+          first_numberless.solution.should == 'S'
+          first_numberless.should_not be_black
+          first_numberless.down_number.should be_nil
+          first_numberless.across_number.should be_nil
+
+          last_cell = @puzzle.cells.last
+          last_cell.solution.should == 'T'
+          last_cell.should_not be_black
+          last_cell.down_number.should be_nil
+          last_cell.across_number.should be_nil
+        end
       end
     end
   end

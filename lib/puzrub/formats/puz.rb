@@ -12,8 +12,7 @@ module Puzrub
           parse_magic(puzfile)
           parse_header(puzfile)
 
-          solution = puzfile.gets(width * height)
-          solved = puzfile.gets(width * height)
+          parse_solution(puzfile)
 
           parse_string_sections(puzfile)
           parse_clues(puzfile)
@@ -44,6 +43,46 @@ module Puzrub
         self.width = headers[7]
         self.height = headers[8]
         self.clue_count = headers[9]
+      end
+
+      def parse_solution(puzfile)
+        solution = puzfile.gets(width * height)
+        solved = puzfile.gets(width * height)
+
+        count = 1
+        x = 0
+        y = 0
+
+        self.cells = []
+        solution.each_char do |c|
+          self.cells << cell = Cell.new
+          if c == ?.
+            cell.is_black = true
+          else
+            cell.solution = c
+
+            above = cell_at(x, y - 1)
+            left = cell_at(x - 1, y)
+
+            if !above || above.black?
+              cell.down_number = count
+            end
+
+            if !left || left.black?
+              cell.across_number = count
+            end
+
+            if cell.down_number || cell.across_number
+              count += 1
+            end
+          end
+
+          x += 1
+          if x == width
+            x = 0
+            y += 1
+          end
+        end
       end
 
       def parse_string_sections(puzfile)
