@@ -1,13 +1,11 @@
 module Puzrub
   # The puzzle object
   class Puzzle
-    attr_accessor :author, :copyright, :title
+    attr_accessor :author, :clues, :copyright, :notes, :title
+    attr_accessor :clue_count, :height, :width
 
     def self.parse(path)
-      p = new
-      Formats::Puz.parse(path, p)
-      p
+      Formats::Puz.new.parse(path)
     end
-
   end
 end
