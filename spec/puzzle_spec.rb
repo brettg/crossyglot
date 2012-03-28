@@ -35,4 +35,9 @@ describe Puzzle do
       @puzzle.cell_at(3, 2).should == @puzzle.cells[13]
     end
   end
+
+  # lookup all clue numbers to count across clues
+  # make hash of number to clues for both
+  describe '#down'
+  describe '#across'
 end

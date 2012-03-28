@@ -1,5 +1,6 @@
 module Puzrub
   module Formats
+    # The .puz file format. See http://code.google.com/p/puz/wiki/FileFormat for info
     class Puz < Puzzle
       MAGIC = "ACROSS&DOWN\0"
       HEADER_LENGTH = 38
@@ -25,6 +26,17 @@ module Puzrub
 
       # def write(path)
       # end
+
+
+      def cksum_region(data, cksum=0)
+        data.each_byte do |b|
+          lowbit = cksum & 1
+          cksum = cksum >> 1
+          cksum += 0x8000  unless lowbit.zero?
+          cksum = (cksum + b) & 0xffff
+        end
+        cksum
+      end
 
       private
 

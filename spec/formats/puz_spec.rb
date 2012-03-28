@@ -1,6 +1,24 @@
 require 'spec_helper'
 
 describe Formats::Puz do
+  describe '#cksum_region' do
+    let(:puz) {Formats::Puz.new}
+    it 'should return given checksum when data is empty' do
+      puz.cksum_region('').should == 0
+      puz.cksum_region('', 12345).should == 12345
+    end
+    describe 'for a bunch of values I calculated from the python or c lib' do
+      {16556 => ['abc'], 32945 => ['def'], 41162 => ["\0\0\0afds"], 57536 => ['def', 123],
+       49333 => ['a' * 100, 5]}.each do |checksum, args|
+        arg_desc = args.inspect
+        arg_desc = arg_desc.size > 30 ? "#{arg_desc[0,30]}..." : arg_desc
+        it "should return a checksum of #{checksum} for #{arg_desc}" do
+          puz.cksum_region(*args).should == checksum
+        end
+      end
+    end
+  end
+
   describe '#parse' do
     {'empty' => 'empty.puz', 'blank' => 'zeros.puz'}.each do |desc, filename|
       describe "for an #{desc} .puz file" do
@@ -94,5 +112,9 @@ describe Formats::Puz do
         end
       end
     end
+  end
+
+  describe '#write' do
+    it 'should write a file to the given path'
   end
 end
