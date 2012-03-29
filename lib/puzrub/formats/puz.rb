@@ -61,32 +61,23 @@ module Puzrub
         solution = puzfile.gets(width * height)
         solved = puzfile.gets(width * height)
 
-        count = 1
+        count = 0
         x = 0
         y = 0
 
         self.cells = []
-        solution.each_char do |c|
-          self.cells << cell = Cell.new
-          if c == ?.
-            cell.is_black = true
+        solution.each_char do |sol|
+          self.cells << if ?. == sol
+            Cell.black
           else
-            cell.solution = c
+            above_cell = cell_at(x, y - 1)
+            left_cell = cell_at(x - 1, y)
 
-            above = cell_at(x, y - 1)
-            left = cell_at(x - 1, y)
+            across = !left_cell || left_cell.black?
+            down = !above_cell || above_cell.black?
+            number = (count += 1)  if across || down
 
-            if !above || above.black?
-              cell.down_number = count
-            end
-
-            if !left || left.black?
-              cell.across_number = count
-            end
-
-            if cell.down_number || cell.across_number
-              count += 1
-            end
+            Cell.new(number, across, down, sol)
           end
 
           x += 1

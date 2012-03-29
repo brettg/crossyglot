@@ -31,7 +31,7 @@ describe Formats::Puz do
     end
 
     describe 'for a .puz file' do
-      describe 'with nothing out of the ordinary going on' do
+      describe 'that is fairly vanilla' do
         before do
           @puzzle = Formats::Puz.new.parse(testfile_path('vanilla.puz'))
         end
@@ -70,6 +70,7 @@ describe Formats::Puz do
         it 'should set #notes' do
           @puzzle.notes.should be_nil
         end
+        # FIXME - this test could be a lot more succinct if Cell#== just compared internals
         it 'should set #cells' do
           @puzzle.cells.should_not be_nil
           @puzzle.cells.size.should == 225
@@ -77,39 +78,48 @@ describe Formats::Puz do
           first_cell = @puzzle.cells.first
           first_cell.solution.should == 'T'
           first_cell.should_not be_black
-          first_cell.down_number.should == 1
-          first_cell.across_number.should == 1
+          first_cell.should be_across
+          first_cell.should be_down
+          first_cell.number.should == 1
 
           second_cell = @puzzle.cells[1]
           second_cell.solution.should == 'A'
           second_cell.should_not be_black
-          second_cell.down_number.should == 2
-          second_cell.across_number.should be_nil
+          second_cell.should_not be_across
+          second_cell.should be_down
+          second_cell.number.should == 2
 
           first_black = @puzzle.cells[4]
           first_black.solution.should be_nil
           first_black.should be_black
-          first_black.down_number.should be_nil
-          first_black.across_number.should be_nil
+          first_black.should_not be_across
+          first_black.should_not be_down
+          first_black.number.should be_nil
 
           first_across_only = @puzzle.cells[15]
           first_across_only.solution.should == 'A'
           first_across_only.should_not be_black
-          first_across_only.down_number.should be_nil
-          first_across_only.across_number.should == 14
+          first_across_only.should be_across
+          first_across_only.should_not be_down
+          first_across_only.number.should == 14
 
           first_numberless = @puzzle.cells[16]
           first_numberless.solution.should == 'S'
           first_numberless.should_not be_black
-          first_numberless.down_number.should be_nil
-          first_numberless.across_number.should be_nil
+          first_numberless.should_not be_across
+          first_numberless.should_not be_down
+          first_numberless.number.should be_nil
 
           last_cell = @puzzle.cells.last
           last_cell.solution.should == 'T'
           last_cell.should_not be_black
-          last_cell.down_number.should be_nil
-          last_cell.across_number.should be_nil
+          last_cell.should_not be_across
+          last_cell.should_not be_down
+          last_cell.number.should be_nil
         end
+      end
+      describe 'for a puzzle with the solution filled in' do
+        it 'should set solution values to relevant cells'
       end
     end
   end
