@@ -3,8 +3,25 @@ module Puzrub
     # The .puz file format. See http://code.google.com/p/puz/wiki/FileFormat for info
     class Puz < Puzzle
       MAGIC = "ACROSS&DOWN\0"
-
-      attr_accessor :headers
+      # TOOD: Is this easy to infer somehow from HEADER_FORMAT?
+      HEADER_LENGTH = 52
+      # The parts of the header and there representation for String#unpack, IN ORDER!
+      HEADER_PARTS = {file_cksum: 'v',
+                      magic: 'a12',
+                      header_cksum: 'v',
+                      magic_cksum: 'Q<',
+                      version: 'Z4',
+                      junk1: 'v',
+                      scrambled_cksum: 'v',
+                      junk2: 'a12',
+                      width: 'C',
+                      height: 'C',
+                      clue_count: 'v',
+                      puzzle_type: 'v',
+                      solution_state: 'v'}
+      HEADER_FORMAT = HEADER_PARTS.values.join
+      # Range of header parts used in header checksum
+      HEADER_CKSUM_RANGE = -5..-1
 
       # defer given methods to the headers hash
       def self.defer_to_headers(*meth_names)
@@ -42,36 +59,11 @@ module Puzrub
       # def write(path)
       # end
 
-      def cksum_region(data, cksum=0)
-        data.each_byte do |b|
-          lowbit = cksum & 1
-          cksum = cksum >> 1
-          cksum += 0x8000  unless lowbit.zero?
-          cksum = (cksum + b) & 0xffff
-        end
-        cksum
-      end
-
-
       private
 
-      # TOOD: Is this easy to infer somehow from HEADER_FORMAT?
-      HEADER_LENGTH = 52
-      # The parts of the header and there representation for String#unpack, IN ORDER!
-      HEADER_PARTS = {file_cksum: 'v',
-                      magic: 'a12',
-                      header_cksum: 'v',
-                      magic_cksum: 'Q<',
-                      version: 'Z4',
-                      junk1: 'v',
-                      scrambled_cksum: 'v',
-                      junk2: 'a12',
-                      width: 'C',
-                      height: 'C',
-                      clue_count: 'v',
-                      puzzle_type: 'v',
-                      solution_state: 'v'}
-      HEADER_FORMAT = HEADER_PARTS.values.join
+      #---------------------------------------
+      #   File Parsing
+      #---------------------------------------
 
       def parse_header(puzfile)
         puzfile.gets(MAGIC)
@@ -137,6 +129,26 @@ module Puzrub
         s.empty? ? nil : s
       end
 
+      #---------------------------------------
+      #   Checksums
+      #---------------------------------------
+
+      def cksum_region(data, cksum=0)
+        data.each_byte do |b|
+          lowbit = cksum & 1
+          cksum = cksum >> 1
+          cksum += 0x8000  unless lowbit.zero?
+          cksum = (cksum + b) & 0xffff
+        end
+        cksum
+      end
+
+      def header_cksum
+        format = HEADER_FORMAT[HEADER_CKSUM_RANGE]
+        values = HEADER_PARTS.keys[HEADER_CKSUM_RANGE].map{|k| headers[k]}
+
+        cksum_region values.pack(format)
+      end
     end
   end
 end
