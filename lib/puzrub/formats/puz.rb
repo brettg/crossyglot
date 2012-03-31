@@ -3,14 +3,29 @@ module Puzrub
     # The .puz file format. See http://code.google.com/p/puz/wiki/FileFormat for info
     class Puz < Puzzle
       MAGIC = "ACROSS&DOWN\0"
-      HEADER_LENGTH = 38
-      HEADER_FORMAT = 'vVVZ4vva12CCvvv'
 
-      attr_accessor :version
+      attr_accessor :headers
+
+      # defer given methods to the headers hash
+      def self.defer_to_headers(*meth_names)
+        meth_names.each do |meth_name|
+          define_method(meth_name) do
+            self.headers[meth_name]
+          end
+          define_method("#{meth_name}=") do |new_val|
+            self.headers[meth_name] = new_val
+          end
+        end
+      end
+
+      defer_to_headers :version, :width, :height, :clue_count
+
+      def headers
+        @headers ||= {}
+      end
 
       def parse(path)
-        File.open(path, 'rb:ASCII-8BIT') do |puzfile|
-          parse_magic(puzfile)
+        File.open(path,'rb:ASCII-8BIT') do |puzfile|
           parse_header(puzfile)
 
           parse_solution(puzfile)
@@ -27,7 +42,6 @@ module Puzrub
       # def write(path)
       # end
 
-
       def cksum_region(data, cksum=0)
         data.each_byte do |b|
           lowbit = cksum & 1
@@ -38,23 +52,40 @@ module Puzrub
         cksum
       end
 
+
       private
 
-      def parse_magic(puzfile)
-        puzfile.gets(MAGIC)
-
-        # Magic wasn't found
-        raise InvalidPuzzleError.new('invalid .puz file')  if puzfile.eof?
-      end
+      # TOOD: Is this easy to infer somehow from HEADER_FORMAT?
+      HEADER_LENGTH = 52
+      # The parts of the header and there representation for String#unpack, IN ORDER!
+      HEADER_PARTS = {file_cksum: 'v',
+                      magic: 'a12',
+                      header_cksum: 'v',
+                      magic_cksum: 'Q<',
+                      version: 'Z4',
+                      junk1: 'v',
+                      scrambled_cksum: 'v',
+                      junk2: 'a12',
+                      width: 'C',
+                      height: 'C',
+                      clue_count: 'v',
+                      puzzle_type: 'v',
+                      solution_state: 'v'}
+      HEADER_FORMAT = HEADER_PARTS.values.join
 
       def parse_header(puzfile)
-        headers = puzfile.gets(HEADER_LENGTH)
-        headers = headers.unpack(HEADER_FORMAT)
+        puzfile.gets(MAGIC)
 
-        self.version = headers[3]
-        self.width = headers[7]
-        self.height = headers[8]
-        self.clue_count = headers[9]
+        # Magic wasn't found, assume file is not good
+        raise InvalidPuzzleError.new('invalid .puz file')  if puzfile.eof?
+
+        # We want part of the header before the MAGIC, so go back a bit
+        puzfile.pos -= MAGIC.size + 2
+
+        header_values = puzfile.gets(HEADER_LENGTH).unpack(HEADER_FORMAT)
+        HEADER_PARTS.keys.each_with_index do |name, idx|
+          self.headers[name] = header_values[idx]
+        end
       end
 
       def parse_solution(puzfile)
@@ -66,6 +97,7 @@ module Puzrub
         y = 0
 
         self.cells = []
+
         solution.each_char do |sol|
           self.cells << if ?. == sol
             Cell.black

@@ -1,8 +1,26 @@
 require 'spec_helper'
 
 describe Formats::Puz do
+  let(:puz) {Formats::Puz.new}
+
+  describe '#headers' do
+    it 'should default to {}' do
+      puz.headers.should == {}
+    end
+    it 'should be the same after updates' do
+      puz.headers[:a] = :b
+      puz.headers[:a].should == :b
+    end
+  end
+
+  describe 'methods deferred to headers' do
+    it 'should allow getting and setting' do
+      puz.width = 4
+      puz.width.should == 4
+    end
+  end
+
   describe '#cksum_region' do
-    let(:puz) {Formats::Puz.new}
     it 'should return given checksum when data is empty' do
       puz.cksum_region('').should == 0
       puz.cksum_region('', 12345).should == 12345
@@ -39,6 +57,33 @@ describe Formats::Puz do
         it 'should be a Formats::Puz' do
           @puzzle.should be_kind_of(Formats::Puz)
         end
+
+        describe 'setting #headers' do
+          it 'should make it a hash' do
+            @puzzle.headers.should be_kind_of(Hash)
+          end
+          it 'of the same length as HEADER_PARTS' do
+            @puzzle.headers.size.should == Formats::Puz::HEADER_PARTS.size
+          end
+          {file_cksum: 41078,
+           magic: Formats::Puz::MAGIC,
+           header_cksum: 55810,
+           magic_cksum: 17165196868810370379,
+           version: '1.2c',
+           junk1: 0,
+           scrambled_cksum: 0,
+           junk2: %w{00 00 00 00 35 04 91 7C 3E 04 91 7C}.map{|n| n.to_i(16)}.pack('c*'),
+           width: 15,
+           height: 15,
+           clue_count: 76,
+           puzzle_type: 1,
+           solution_state: 0}.each do |header, val|
+            it "should set #{header}" do
+              @puzzle.headers[header].should == val
+            end
+          end
+        end
+
         it 'should set #version' do
           @puzzle.version.should == '1.2c'
         end
@@ -120,6 +165,9 @@ describe Formats::Puz do
       end
       describe 'for a puzzle with the solution filled in' do
         it 'should set solution values to relevant cells'
+      end
+      describe 'for a puzzle cell with rebus cells' do
+        it 'should set the rebus value of the appropriate cells'
       end
     end
   end
