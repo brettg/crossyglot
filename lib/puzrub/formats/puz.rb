@@ -82,7 +82,7 @@ module Puzrub
 
       def parse_solution(puzfile)
         solution = puzfile.gets(width * height)
-        solved = puzfile.gets(width * height)
+        fill = puzfile.gets(width * height)
 
         count = 0
         x = 0
@@ -130,10 +130,21 @@ module Puzrub
       end
 
       #---------------------------------------
+      #   Writing
+      #---------------------------------------
+
+      # def header_data
+      # end
+      # def solution_data
+      # end
+      # def fill_data
+      # end
+
+      #---------------------------------------
       #   Checksums
       #---------------------------------------
 
-      def cksum_region(data, cksum=0)
+      def checksum(data, cksum=0)
         data.each_byte do |b|
           lowbit = cksum & 1
           cksum = cksum >> 1
@@ -147,7 +158,7 @@ module Puzrub
         format = HEADER_FORMAT[HEADER_CKSUM_RANGE]
         values = HEADER_PARTS.keys[HEADER_CKSUM_RANGE].map{|k| headers[k]}
 
-        cksum_region values.pack(format)
+        checksum values.pack(format)
       end
     end
   end

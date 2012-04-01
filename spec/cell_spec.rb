@@ -1,14 +1,14 @@
 require 'spec_helper'
 
 describe Cell do
+  let(:cell) {Cell.new}
 
   describe '.new' do
     it 'should set nothing with no args' do
-      c = Cell.new
-      c.number.should be_nil
-      c.should_not be_across
-      c.should_not be_down
-      c.solution.should be_nil
+      cell.number.should be_nil
+      cell.should_not be_across
+      cell.should_not be_down
+      cell.solution.should be_nil
     end
     it 'should set number, down, across, and solution' do
       c = Cell.new(14, true, false, 'A')
@@ -27,16 +27,24 @@ describe Cell do
     end
   end
 
-  describe '#black?' do
-    it 'should be true if @is_black is truthy' do
-      c = Cell.new
-      c.should_not be_black
-      c.is_black = 'helllo!'
-      c.should be_black
-      c.is_black = false
-      c.should_not be_black
+  {is_marked_incorrect: :marked_incorrect?, is_black: :black?, is_circled: :circled?,
+   was_previously_marked_incorrect: :previously_marked_incorrect?, was_revealed: :revealed?
+  }.each do |attr, predicate|
+    describe "##{predicate}" do
+      it "should be true when @#{attr} is true" do
+        set_method = "#{attr}="
+
+        cell.send(predicate).should == false
+
+        cell.send(set_method, 'helllo!')
+        cell.send(predicate).should == true
+
+        cell.send(set_method, nil)
+        cell.send(predicate).should == false
+      end
     end
   end
+
   describe '#across?' do
     it 'should be true if @has_across_clue is true and number is set' do
       c = Cell.new

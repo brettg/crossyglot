@@ -20,10 +20,10 @@ describe Formats::Puz do
     end
   end
 
-  describe '#cksum_region' do
+  describe '#checksum' do
     it 'should return given checksum when data is empty' do
-      puz.send(:cksum_region, '').should == 0
-      puz.send(:cksum_region, '', 12345).should == 12345
+      puz.send(:checksum, '').should == 0
+      puz.send(:checksum, '', 12345).should == 12345
     end
     describe 'for a bunch of values I calculated from the python or c lib' do
       {16556 => ['abc'], 32945 => ['def'], 41162 => ["\0\0\0afds"], 57536 => ['def', 123],
@@ -31,7 +31,7 @@ describe Formats::Puz do
         arg_desc = args.inspect
         arg_desc = arg_desc.size > 30 ? "#{arg_desc[0,30]}..." : arg_desc
         it "should return a checksum of #{checksum} for #{arg_desc}" do
-          puz.send(:cksum_region, *args).should == checksum
+          puz.send(:checksum, *args).should == checksum
         end
       end
     end
@@ -58,7 +58,7 @@ describe Formats::Puz do
     end
 
     describe 'a fairly vanila .puz' do
-      before do
+      before(:all) do
         @puzzle = Formats::Puz.new.parse(testfile_path('vanilla.puz'))
       end
 

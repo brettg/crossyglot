@@ -1,6 +1,7 @@
 *.gem
 .bundle
 Gemfile.lock
-pkg/*
 .DS_Store
 .rake_tasks
+pkg/*
+doc/*
