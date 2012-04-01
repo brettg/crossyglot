@@ -88,10 +88,10 @@ module Puzrub
         x = 0
         y = 0
 
-        self.cells = []
+        cells.clear
 
         solution.each_char do |sol|
-          self.cells << if ?. == sol
+          cells << if ?. == sol
             Cell.black
           else
             above_cell = cell_at(x, y - 1)
@@ -119,8 +119,8 @@ module Puzrub
       end
 
       def parse_clues(puzfile)
-        self.clues = []
-        clue_count.times {self.clues << next_string(puzfile)}
+        clues.clear
+        clue_count.times {clues << next_string(puzfile)}
       end
 
       # Next \0 delimited string from file, nil if of empty length
@@ -135,10 +135,14 @@ module Puzrub
 
       # def header_data
       # end
-      # def solution_data
-      # end
-      # def fill_data
-      # end
+
+      def solution_data
+        cells.map {|c| c.black? ? ?. : c.solution}.join
+      end
+
+      def fill_data
+        cells.map {|c| c.fill || (c.black? ? ?. : ?-)}.join
+      end
 
       #---------------------------------------
       #   Checksums

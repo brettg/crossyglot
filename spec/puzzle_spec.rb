@@ -1,8 +1,31 @@
 require 'spec_helper'
 
 describe Puzzle do
+  let(:puzzle) {Puzzle.new}
+
   describe '.parse' do
     it 'should create correct subclass and call #parse based on file extension'
+  end
+
+  describe '#cells' do
+    it 'should default to an empty array' do
+      puzzle.cells.should == []
+    end
+    it 'should keep additions around' do
+      c = Cell.new
+      puzzle.cells << c
+      puzzle.cells.should == [c]
+    end
+  end
+  describe '#clues' do
+    it 'should default to an empty array' do
+      puzzle.clues.should == []
+    end
+    it 'should keep additions around' do
+      clue = 'hello!'
+      puzzle.clues << clue
+      puzzle.clues.should == [clue]
+    end
   end
 
   describe '#cell_at' do
@@ -10,7 +33,7 @@ describe Puzzle do
       @puzzle = Puzzle.new
       @puzzle.width = 5
       @puzzle.height = 6
-      @puzzle.cells = (1..30).map {Cell.new}
+      @puzzle.cells.concat (1..30).map {Cell.new}
     end
     it 'should return nil if x is out of bounds' do
       @puzzle.cell_at(5, 0).should == nil
@@ -20,8 +43,8 @@ describe Puzzle do
       @puzzle.cell_at(0, 6).should == nil
       @puzzle.cell_at(0, -1).should == nil
     end
-    it 'should return nil if cells is nil' do
-      @puzzle.cells = nil
+    it 'should return nil if cells is empty' do
+      @puzzle.cells.clear
       @puzzle.cell_at(0, 0).should == nil
     end
     it 'return cell based on width and height' do
@@ -45,8 +68,7 @@ describe Puzzle do
     #
     before do
       @puzzle = Puzzle.new
-      @puzzle.clues = %w{1across 3across 4across 6across 7across 1down 2down 3down 5down}
-      @puzzle.cells = []
+      @puzzle.clues.concat %w{1across 3across 4across 6across 7across 1down 2down 3down 5down}
       [[1, true, true], [2, false, true], false,            [3, true, true],
        [4, true],       [],               [5, false, true], [],
        [6, true],       false,            [7, true],        []].each do |cell_init|

@@ -1,11 +1,18 @@
 module Puzrub
   # The puzzle object
   class Puzzle
-    attr_accessor :author, :cells, :clues, :copyright, :notes, :title
+    attr_accessor :author, :copyright, :notes, :title
     attr_accessor :clue_count, :height, :width
 
     def self.parse(path)
       Formats::Puz.new.parse(path)
+    end
+
+    def cells
+      @cells ||= []
+    end
+    def clues
+      @clues ||= []
     end
 
     def cell_at(x, y)
@@ -30,7 +37,7 @@ module Puzrub
     # cell_flag_method is one of :down? or :across?
     # clue index is the first clue to start with in the clues array
     def collect_clues_by_number(cell_flag_method, clue_index=0)
-      if cells && clues
+      unless cells.empty? || clues.empty?
         cells.inject({}) do |accum, cell|
           if cell.send cell_flag_method
             accum[cell.number] = clues[clue_index]

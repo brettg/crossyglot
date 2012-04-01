@@ -188,4 +188,27 @@ describe Formats::Puz do
   describe '#write' do
     it 'should write a file to the given path'
   end
+
+  describe '#solution_data' do
+    it 'should return a string with the solution letters and dots for black cells' do
+      puz.cells << Cell.new(nil, false, false, 'A')
+      puz.cells << Cell.new(nil, false, false, 'B')
+      puz.cells << Cell.new(nil, false, false, 'C')
+      puz.cells << Cell.black
+      puz.cells << Cell.new(nil, false, false, 'D')
+
+      puz.send(:solution_data).should == 'ABC.D'
+    end
+  end
+
+  describe '#fill_data' do
+    it 'should return a string with a fill character for each cell with fill, a . or - otherwise' do
+      3.times {puz.cells << Cell.new(nil, false, false, 'A')}
+      puz.cells.last.fill = 'C'
+      puz.cells << Cell.black
+      puz.cells << Cell.new(nil, false, false, 'D')
+
+      puz.send(:fill_data).should == '--C.-'
+    end
+  end
 end
