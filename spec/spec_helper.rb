@@ -1,9 +1,9 @@
 $LOAD_PATH << File.expand_path('../../lib', __FILE__)
 
 require 'rspec'
-require 'puzrub'
+require 'crossdress'
 
-include Puzrub
+include Crossdress
 
 module TestfileHelper
   TESTFILE_DIR = File.expand_path('../input-files', __FILE__)

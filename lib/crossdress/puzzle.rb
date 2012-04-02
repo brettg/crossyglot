@@ -1,4 +1,4 @@
-module Puzrub
+module Crossdress
   # The puzzle object
   class Puzzle
     attr_accessor :author, :copyright, :notes, :title

@@ -1,4 +1,4 @@
-module Puzrub
+module Crossdress
   module Formats
     # The .puz file format. See http://code.google.com/p/puz/wiki/FileFormat for info
     class Puz < Puzzle
