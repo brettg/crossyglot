@@ -22,6 +22,7 @@ describe Formats::Puz do
 
   describe '#checksum' do
     it 'should return given checksum when data is empty' do
+      puz.send(:checksum, nil).should == 0
       puz.send(:checksum, '').should == 0
       puz.send(:checksum, '', 12345).should == 12345
     end
@@ -43,6 +44,34 @@ describe Formats::Puz do
       puz.send(:header_cksum).should == 55810
       puz.headers.merge!(width: 21, height: 21, clue_count: 140, puzzle_type: 1, solution_state: 0)
       puz.send(:header_cksum).should == 65028
+    end
+  end
+
+  describe '#puzzle_cksum' do
+    it 'should checksum the headers, solution, grid, clues, and strings' do
+      puz.headers.merge!(width: 15, height: 15, clue_count: 76, puzzle_type: 1, solution_state: 0)
+      puz.send(:puzzle_cksum).should == 55810
+
+      puz.cells << Cell.new(1, true, true, 'A')
+      puz.send(:puzzle_cksum).should == 14030
+
+      puz.cells.last.fill = 'B'
+      puz.send(:puzzle_cksum).should == 14051
+
+      puz.title = 'The Title'
+      puz.send(:puzzle_cksum).should == 35433
+
+      puz.author = 'Nobody, Really'
+      puz.send(:puzzle_cksum).should == 57062
+
+      puz.copyright = '20 Oh 12!'
+      puz.send(:puzzle_cksum).should == 48579
+
+      puz.clues << 'The letter before B'
+      puz.send(:puzzle_cksum).should == 65028
+
+      puz.notes = 'Hardest puzzle possible'
+      puz.send(:puzzle_cksum).should == 8625
     end
   end
 
@@ -73,7 +102,7 @@ describe Formats::Puz do
         it 'of the same length as HEADER_PARTS' do
           @puzzle.headers.size.should == Formats::Puz::HEADER_PARTS.size
         end
-        {file_cksum: 41078,
+        {puzzle_cksum: 41078,
          magic: Formats::Puz::MAGIC,
          header_cksum: 55810,
          magic_cksum: 17165196868810370379,
@@ -123,52 +152,22 @@ describe Formats::Puz do
       it 'should set #notes' do
         @puzzle.notes.should be_nil
       end
-      # FIXME - this test could be a lot more succinct if Cell#== just compared internals
       it 'should set #cells' do
         @puzzle.cells.should_not be_nil
         @puzzle.cells.size.should == 225
 
-        first_cell = @puzzle.cells.first
-        first_cell.solution.should == 'T'
-        first_cell.should_not be_black
-        first_cell.should be_across
-        first_cell.should be_down
-        first_cell.number.should == 1
-
-        second_cell = @puzzle.cells[1]
-        second_cell.solution.should == 'A'
-        second_cell.should_not be_black
-        second_cell.should_not be_across
-        second_cell.should be_down
-        second_cell.number.should == 2
-
-        first_black = @puzzle.cells[4]
-        first_black.solution.should be_nil
-        first_black.should be_black
-        first_black.should_not be_across
-        first_black.should_not be_down
-        first_black.number.should be_nil
-
-        first_across_only = @puzzle.cells[15]
-        first_across_only.solution.should == 'A'
-        first_across_only.should_not be_black
-        first_across_only.should be_across
-        first_across_only.should_not be_down
-        first_across_only.number.should == 14
-
-        first_numberless = @puzzle.cells[16]
-        first_numberless.solution.should == 'S'
-        first_numberless.should_not be_black
-        first_numberless.should_not be_across
-        first_numberless.should_not be_down
-        first_numberless.number.should be_nil
-
-        last_cell = @puzzle.cells.last
-        last_cell.solution.should == 'T'
-        last_cell.should_not be_black
-        last_cell.should_not be_across
-        last_cell.should_not be_down
-        last_cell.number.should be_nil
+        {0 => [?T, false, true, true, 1], 1 => [?A, false, false, true, 2],
+         4 => [nil, true, false, false, nil], 15 => [?A, false, true, false, 14],
+         16 => [?S, false, false, false, nil], -1 => [?T, false, false, false, nil]
+        }.each do |idx, cell_props|
+          sol, blk, acr, dwn, num = cell_props
+          cell = @puzzle.cells[idx]
+          cell.solution.should == sol
+          cell.black?.should == blk
+          cell.across?.should == acr
+          cell.down?.should == dwn
+          cell.number.should == num
+        end
       end
     end
     describe 'for a puzzle with the solution filled in' do

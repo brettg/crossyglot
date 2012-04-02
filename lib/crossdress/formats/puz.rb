@@ -6,7 +6,7 @@ module Crossdress
       # TOOD: Is this easy to infer somehow from HEADER_FORMAT?
       HEADER_LENGTH = 52
       # The parts of the header and there representation for String#unpack, IN ORDER!
-      HEADER_PARTS = {file_cksum: 'v',
+      HEADER_PARTS = {puzzle_cksum: 'v',
                       magic: 'a12',
                       header_cksum: 'v',
                       magic_cksum: 'Q<',
@@ -149,7 +149,7 @@ module Crossdress
       #---------------------------------------
 
       def checksum(data, cksum=0)
-        data.each_byte do |b|
+        (data || '').each_byte do |b|
           lowbit = cksum & 1
           cksum = cksum >> 1
           cksum += 0x8000  unless lowbit.zero?
@@ -163,6 +163,13 @@ module Crossdress
         values = HEADER_PARTS.keys[HEADER_CKSUM_RANGE].map{|k| headers[k]}
 
         checksum values.pack(format)
+      end
+
+      def puzzle_cksum
+        [solution_data, fill_data, title, author, copyright, clues.join, notes
+        ].inject(header_cksum) do |cksum, data|
+          checksum(data, cksum)
+        end
       end
     end
   end
