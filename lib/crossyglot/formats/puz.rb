@@ -1,4 +1,4 @@
-module Crossdress
+module Crossyglot
   module Formats
     # The .puz file format. See http://code.google.com/p/puz/wiki/FileFormat for info
     class Puz < Puzzle
@@ -12,9 +12,9 @@ module Crossdress
                       header_cksum: 'v',
                       magic_cksum: 'a8',
                       version: 'Z4',
-                      junk1: 'v',
+                      unknown1: 'v',
                       scrambled_cksum: 'v',
-                      junk2: 'a12',
+                      unknown2: 'a12',
                       width: 'C',
                       height: 'C',
                       clue_count: 'v',
@@ -184,7 +184,6 @@ module Crossdress
           lows << (ICHEATED_MASK[idx] ^ (cksum & 0xFF))
           highs << (ICHEATED_MASK[idx + ICHEATED_MASK.size / 2] ^ ((cksum & 0xFF00) >> 8))
         end
-        p lows + highs
         (lows + highs).pack('C*')
       end
 
@@ -194,7 +193,7 @@ module Crossdress
       end
       # notes + \0 if notes is not empty and version == 1.3
       def notes_for_cksum
-        if (version || '').to_s == '1.3'
+        if version && version.to_s == '1.3'
           if notes && !notes.empty?
             notes + ?\0
           end

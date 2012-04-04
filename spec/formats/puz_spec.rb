@@ -123,7 +123,7 @@ describe Formats::Puz do
       end
     end
 
-    describe 'a fairly vanila .puz' do
+    describe 'for a fairly vanilla .puz' do
       before(:all) do
         @puzzle = Formats::Puz.new.parse(testfile_path('vanilla.puz'))
       end
@@ -133,20 +133,18 @@ describe Formats::Puz do
       end
 
       describe 'setting #headers' do
-        it 'should make it a hash' do
-          @puzzle.headers.should be_kind_of(Hash)
-        end
-        it 'of the same length as HEADER_PARTS' do
+        it 'should set it to the same length as HEADER_PARTS' do
           @puzzle.headers.size.should == Formats::Puz::HEADER_PARTS.size
         end
+
         {puzzle_cksum: 41078,
          magic: Formats::Puz::MAGIC,
          header_cksum: 55810,
          magic_cksum: "\x4B\xED\x16\x69\x9B\x07\x37\xEE",
          version: '1.2c',
-         junk1: 0,
+         unknown1: 0,
          scrambled_cksum: 0,
-         junk2: "\0\0\0\0\x35\x04\x91\x7C\x3E\x04\x91\x7C",
+         unknown2: "\0\0\0\0\x35\x04\x91\x7C\x3E\x04\x91\x7C",
          width: 15,
          height: 15,
          clue_count: 76,

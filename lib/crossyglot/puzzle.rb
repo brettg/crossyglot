@@ -1,4 +1,4 @@
-module Crossdress
+module Crossyglot
   # The puzzle object
   class Puzzle
     attr_accessor :author, :copyright, :notes, :title

@@ -1,9 +1,9 @@
 $LOAD_PATH << File.expand_path('../../lib', __FILE__)
 
 require 'rspec'
-require 'crossdress'
+require 'crossyglot'
 
-include Crossdress
+include Crossyglot
 
 module TestfileHelper
   TESTFILE_DIR = File.expand_path('../input-files', __FILE__)

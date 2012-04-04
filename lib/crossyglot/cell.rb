@@ -1,4 +1,4 @@
-module Crossdress
+module Crossyglot
   # One square in the puzzle grid
   class Cell
     attr_accessor :number, :solution, :fill
