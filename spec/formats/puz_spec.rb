@@ -40,38 +40,75 @@ describe Formats::Puz do
 
   describe '#header_cksum' do
     it 'should be the checksum of the last 5 header parts' do
-      puz.headers.merge!(width: 15, height: 15, clue_count: 76, puzzle_type: 1, solution_state: 0)
+      puz.headers.merge!(width: 15, height: 15, puzzle_type: 1, solution_state: 0)
+      # clue count is inferred from number of clues, so add 76
+      puz.clues.concat ['a'] * 76
       puz.send(:header_cksum).should == 55810
-      puz.headers.merge!(width: 21, height: 21, clue_count: 140, puzzle_type: 1, solution_state: 0)
+
+      puz.headers.merge!(width: 21, height: 21, puzzle_type: 1, solution_state: 0)
+      puz.clues.clear
+      puz.clues.concat ['a'] * 140
       puz.send(:header_cksum).should == 65028
     end
   end
 
   describe '#puzzle_cksum' do
     it 'should checksum the headers, solution, grid, clues, and strings' do
-      puz.headers.merge!(width: 15, height: 15, clue_count: 76, puzzle_type: 1, solution_state: 0)
-      puz.send(:puzzle_cksum).should == 55810
-
-      puz.cells << Cell.new(1, true, true, 'A')
-      puz.send(:puzzle_cksum).should == 14030
-
-      puz.cells.last.fill = 'B'
-      puz.send(:puzzle_cksum).should == 14051
-
-      puz.title = 'The Title'
-      puz.send(:puzzle_cksum).should == 35433
-
-      puz.author = 'Nobody, Really'
-      puz.send(:puzzle_cksum).should == 57062
-
-      puz.copyright = '20 Oh 12!'
-      puz.send(:puzzle_cksum).should == 48579
+      puz.headers.merge!(width:  1, height: 1, puzzle_type: 1, solution_state: 0, version: '1.3')
+      puz.send(:puzzle_cksum).should == 9728
 
       puz.clues << 'The letter before B'
-      puz.send(:puzzle_cksum).should == 65028
+      puz.send(:puzzle_cksum).should == 35852
+
+      puz.cells << Cell.new(1, true, true, 'B')
+      puz.send(:puzzle_cksum).should == 18374
+
+      puz.title = ''
+      puz.send(:puzzle_cksum).should == 18374
+
+      puz.title = 'The Title'
+      puz.send(:puzzle_cksum).should == 34377
+
+      puz.author = 'Nobody, Really'
+      puz.send(:puzzle_cksum).should == 37274
+
+      puz.copyright = '20 oh 12!'
+      puz.send(:puzzle_cksum).should == 44660
+
+      puz.notes = ''
+      puz.send(:puzzle_cksum).should == 44660
 
       puz.notes = 'Hardest puzzle possible'
-      puz.send(:puzzle_cksum).should == 8625
+      puz.send(:puzzle_cksum).should == 137
+    end
+    it 'should only include notes if version == 1.3' do
+      puz.headers.merge!(width:  1, height: 1, puzzle_type: 1, solution_state: 0, version:'1.2')
+      puz.notes = 'abc'
+      puz.send(:puzzle_cksum).should == 9728
+
+      # note version can be passed in as float
+      puz.version = 1.3
+      puz.send(:puzzle_cksum).should == 8886
+
+      puz.version = nil
+      puz.send(:puzzle_cksum).should == 9728
+    end
+  end
+
+  describe '#icheated_cksum' do
+    it 'should do a bunch of funky nonsense and calculate correctly' do
+      puz.headers.merge!(width: 1, height: 1, clue_count: 1, puzzle_type: 1, solution_state: 0)
+      puz.cells << Cell.new(1, true, true, 'B')
+      puz.title = 'i cheated test'
+      puz.author = 'the author'
+      puz.copyright = '2000'
+      puz.clues << 'first clue'
+      puz.notes = 'the notes'
+
+      puz.send(:icheated_cksum).should == "I\x01e\xecoTE\xd9"
+
+      puz.version = '1.3'
+      puz.send(:icheated_cksum).should == "I\x01e\x91oTE\xb2"
     end
   end
 
@@ -105,11 +142,11 @@ describe Formats::Puz do
         {puzzle_cksum: 41078,
          magic: Formats::Puz::MAGIC,
          header_cksum: 55810,
-         magic_cksum: 17165196868810370379,
+         magic_cksum: "\x4B\xED\x16\x69\x9B\x07\x37\xEE",
          version: '1.2c',
          junk1: 0,
          scrambled_cksum: 0,
-         junk2: %w{00 00 00 00 35 04 91 7C 3E 04 91 7C}.map{|n| n.to_i(16)}.pack('c*'),
+         junk2: "\0\0\0\0\x35\x04\x91\x7C\x3E\x04\x91\x7C",
          width: 15,
          height: 15,
          clue_count: 76,
@@ -130,9 +167,6 @@ describe Formats::Puz do
       it 'should set #height' do
         @puzzle.height.should == 15
       end
-      it 'should set #clue_count' do
-        @puzzle.clue_count.should == 76
-      end
 
       it 'should set #title' do
         @puzzle.title.should == 'LA Times, Mon, Mar 26, 2012'
@@ -152,6 +186,7 @@ describe Formats::Puz do
       it 'should set #notes' do
         @puzzle.notes.should be_nil
       end
+      # FIXME - this test could be a lot more succinct if Cell#== just compared internals
       it 'should set #cells' do
         @puzzle.cells.should_not be_nil
         @puzzle.cells.size.should == 225

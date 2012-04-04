@@ -3,13 +3,14 @@ module Crossdress
     # The .puz file format. See http://code.google.com/p/puz/wiki/FileFormat for info
     class Puz < Puzzle
       MAGIC = "ACROSS&DOWN\0"
+      ICHEATED_MASK = 'ICHEATED'.unpack('C*')
       # TOOD: Is this easy to infer somehow from HEADER_FORMAT?
       HEADER_LENGTH = 52
       # The parts of the header and there representation for String#unpack, IN ORDER!
       HEADER_PARTS = {puzzle_cksum: 'v',
                       magic: 'a12',
                       header_cksum: 'v',
-                      magic_cksum: 'Q<',
+                      magic_cksum: 'a8',
                       version: 'Z4',
                       junk1: 'v',
                       scrambled_cksum: 'v',
@@ -35,7 +36,9 @@ module Crossdress
         end
       end
 
-      defer_to_headers :version, :width, :height, :clue_count
+      ##
+      # :method: version
+      defer_to_headers :version, :width, :height
 
       def headers
         @headers ||= {}
@@ -120,7 +123,7 @@ module Crossdress
 
       def parse_clues(puzfile)
         clues.clear
-        clue_count.times {clues << next_string(puzfile)}
+        headers[:clue_count].times {clues << next_string(puzfile)}
       end
 
       # Next \0 delimited string from file, nil if of empty length
@@ -159,6 +162,8 @@ module Crossdress
       end
 
       def header_cksum
+        headers[:clue_count] = clues.size
+
         format = HEADER_FORMAT[HEADER_CKSUM_RANGE]
         values = HEADER_PARTS.keys[HEADER_CKSUM_RANGE].map{|k| headers[k]}
 
@@ -166,9 +171,33 @@ module Crossdress
       end
 
       def puzzle_cksum
-        [solution_data, fill_data, title, author, copyright, clues.join, notes
-        ].inject(header_cksum) do |cksum, data|
-          checksum(data, cksum)
+        data = [solution_data, fill_data, strings_section_for_cksum, clues.join,
+                notes_for_cksum].join
+        checksum data, header_cksum
+      end
+
+      def icheated_cksum
+        cksums = [header_cksum, checksum(solution_data), checksum(fill_data),
+                  checksum([strings_section_for_cksum, clues.join, notes_for_cksum].join)]
+        lows, highs = [], []
+        cksums.each_with_index do |cksum, idx|
+          lows << (ICHEATED_MASK[idx] ^ (cksum & 0xFF))
+          highs << (ICHEATED_MASK[idx + ICHEATED_MASK.size / 2] ^ ((cksum & 0xFF00) >> 8))
+        end
+        p lows + highs
+        (lows + highs).pack('C*')
+      end
+
+      # title author and copyright followed by \0 if they are not empty
+      def strings_section_for_cksum
+        [title, author, copyright].reject{|s| !s || s.empty?}.map {|s| s + ?\0}.join
+      end
+      # notes + \0 if notes is not empty and version == 1.3
+      def notes_for_cksum
+        if (version || '').to_s == '1.3'
+          if notes && !notes.empty?
+            notes + ?\0
+          end
         end
       end
     end

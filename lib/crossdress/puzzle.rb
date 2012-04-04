@@ -2,7 +2,7 @@ module Crossdress
   # The puzzle object
   class Puzzle
     attr_accessor :author, :copyright, :notes, :title
-    attr_accessor :clue_count, :height, :width
+    attr_accessor :height, :width
 
     def self.parse(path)
       Formats::Puz.new.parse(path)
