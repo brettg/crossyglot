@@ -4,8 +4,8 @@ describe Formats::Puz do
   let(:puz) {Formats::Puz.new}
 
   describe '#headers' do
-    it 'should default to {}' do
-      puz.headers.should == {}
+    it 'should default to HEADER_DEFAULTS' do
+      puz.headers.should == Formats::Puz::HEADER_DEFAULTS
     end
     it 'should be the same after updates' do
       puz.headers[:a] = :b
@@ -13,10 +13,13 @@ describe Formats::Puz do
     end
   end
 
-  describe 'methods deferred to headers' do
+  describe 'methods proxied to headers' do
     it 'should allow getting and setting' do
       puz.width = 4
       puz.width.should == 4
+
+      puz.version = '1.2b'
+      puz.headers[:version].should == '1.2b'
     end
   end
 
@@ -97,7 +100,8 @@ describe Formats::Puz do
 
   describe '#icheated_cksum' do
     it 'should do a bunch of funky nonsense and calculate correctly' do
-      puz.headers.merge!(width: 1, height: 1, clue_count: 1, puzzle_type: 1, solution_state: 0)
+      puz.headers.merge!(width: 1, height: 1, clue_count: 1, version: '1.2', puzzle_type: 1,
+                         solution_state: 0)
       puz.cells << Cell.new(1, true, true, 'B')
       puz.title = 'i cheated test'
       puz.author = 'the author'
@@ -113,6 +117,17 @@ describe Formats::Puz do
   end
 
   describe '#parse' do
+    it 'should accept a path' do
+      puz = Formats::Puz.new.parse(testfile_path('vanilla.puz'))
+      puz.title.should == 'LA Times, Mon, Mar 26, 2012'
+    end
+    it 'should accept an IO' do
+      puz = File.open(testfile_path('vanilla.puz'), 'rb') do |f|
+        Formats::Puz.new.parse(f)
+      end
+      puz.title.should == 'LA Times, Mon, Mar 26, 2012'
+    end
+
     {'empty' => 'empty.puz', 'blank' => 'zeros.puz'}.each do |desc, filename|
       describe "for an #{desc} .puz file" do
         it 'should raise an InvalidPuzzleError' do
@@ -140,7 +155,7 @@ describe Formats::Puz do
         {puzzle_cksum: 41078,
          magic: Formats::Puz::MAGIC,
          header_cksum: 55810,
-         magic_cksum: "\x4B\xED\x16\x69\x9B\x07\x37\xEE",
+         icheated_cksum: "\x4B\xED\x16\x69\x9B\x07\x37\xEE",
          version: '1.2c',
          unknown1: 0,
          scrambled_cksum: 0,
@@ -218,7 +233,31 @@ describe Formats::Puz do
   end
 
   describe '#write' do
-    it 'should write a file to the given path'
+    it 'should write to an IO given an IO' do
+      io = StringIO.new
+      puz.write(io)
+      data = io.string
+      data.size.should > 0
+    end
+    it 'should write a file to the given a path' do
+      tmp_output_path('puzwrite') do |tmp_path|
+        puz.write(tmp_path)
+        File.exists?(tmp_path).should be_true
+      end
+    end
+
+    %w{vanilla}.each do |fn|
+      it "should correctly roundtrip #{fn}.puz" do
+        path = testfile_path("#{fn}.puz")
+        File.open(path, 'rb') do |puzfile|
+          puz = Formats::Puz.parse(puzfile)
+          out = StringIO.open('', 'wb') {|sio| puz.write(sio); sio.string}
+
+          puzfile.rewind
+          puzfile.read.inspect.should == out.inspect
+        end
+      end
+    end
   end
 
   describe '#solution_data' do

@@ -10,7 +10,7 @@ module Crossyglot
       HEADER_PARTS = {puzzle_cksum: 'v',
                       magic: 'a12',
                       header_cksum: 'v',
-                      magic_cksum: 'a8',
+                      icheated_cksum: 'a8',
                       version: 'Z4',
                       unknown1: 'v',
                       scrambled_cksum: 'v',
@@ -20,12 +20,13 @@ module Crossyglot
                       clue_count: 'v',
                       puzzle_type: 'v',
                       solution_state: 'v'}
+      HEADER_DEFAULTS = {magic: MAGIC, version: '1.3', puzzle_type: 1}
       HEADER_FORMAT = HEADER_PARTS.values.join
       # Range of header parts used in header checksum
       HEADER_CKSUM_RANGE = -5..-1
 
       # defer given methods to the headers hash
-      def self.defer_to_headers(*meth_names)
+      def self.proxy_to_headers(*meth_names)
         meth_names.each do |meth_name|
           define_method(meth_name) do
             self.headers[meth_name]
@@ -38,35 +39,52 @@ module Crossyglot
 
       ##
       # :method: version
-      defer_to_headers :version, :width, :height
+      proxy_to_headers :version, :width, :height
 
       def headers
-        @headers ||= {}
+        @headers ||= HEADER_DEFAULTS.clone
       end
 
-      def parse(path)
-        File.open(path,'rb:ASCII-8BIT') do |puzfile|
-          parse_header(puzfile)
-
-          parse_solution(puzfile)
-
-          parse_string_sections(puzfile)
-          parse_clues(puzfile)
-
-          self.notes = next_string(puzfile)
+      def parse(path_or_io)
+        if path_or_io.is_a?(String)
+          File.open(path_or_io,'rb:ASCII-8BIT') do |puzfile|
+            parse_io(puzfile)
+          end
+        else
+          parse_io(path_or_io)
         end
 
         self
       end
 
-      # def write(path)
-      # end
+      # Write out the file. If given a path the file will be created (unless it exists), if given an
+      # IO the puz data will be written to the IO.
+      def write(path_or_io)
+        if path_or_io.is_a? String
+          File.open(path_or_io, 'wb') do |f|
+            write_to_io(f)
+          end
+        else
+          write_to_io(path_or_io)
+        end
+      end
 
       private
 
       #---------------------------------------
       #   File Parsing
       #---------------------------------------
+
+      def parse_io(puzfile)
+        parse_header(puzfile)
+
+        parse_solution(puzfile)
+
+        parse_string_sections(puzfile)
+        parse_clues(puzfile)
+
+        self.notes = next_string(puzfile)
+      end
 
       def parse_header(puzfile)
         puzfile.gets(MAGIC)
@@ -136,8 +154,29 @@ module Crossyglot
       #   Writing
       #---------------------------------------
 
-      # def header_data
-      # end
+      def set_cksums_to_header
+        headers[:puzzle_cksum] = puzzle_cksum
+        headers[:header_cksum] = header_cksum
+        headers[:icheated_cksum] = icheated_cksum
+      end
+
+      def write_to_io(io)
+        io.write(header_data)
+        io.write(solution_data)
+        io.write(fill_data)
+        io.write([title, author, copyright].join(?\0) + ?\0)
+        io.write(clues.join(?\0) + ?\0)
+        io.write((notes || '') + ?\0)
+      end
+
+      def header_data
+        set_cksums_to_header
+
+        parts = HEADER_PARTS.map do |k, v|
+          headers[k] || (v[/a|Z/] ? '' : 0)
+        end
+        parts.pack(HEADER_FORMAT)
+      end
 
       def solution_data
         cells.map {|c| c.black? ? ?. : c.solution}.join
@@ -165,7 +204,7 @@ module Crossyglot
         headers[:clue_count] = clues.size
 
         format = HEADER_FORMAT[HEADER_CKSUM_RANGE]
-        values = HEADER_PARTS.keys[HEADER_CKSUM_RANGE].map{|k| headers[k]}
+        values = HEADER_PARTS.keys[HEADER_CKSUM_RANGE].map{|k| headers[k] || 0}
 
         checksum values.pack(format)
       end
