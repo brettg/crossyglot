@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+if ARGV.size < 1
+  puts 'Puzzle file(s) required!'
+  puts 'Usage: roundtrip </path/to/puzfile.puz>...'
+  puts 'exiting...'
+end
+
+require File.expand_path('../../spec_helper', __FILE__)
+
+describe 'Roundtrip tests' do
+  ARGV.each do |f|
+    if File.exists?(f)
+      it "should roundtring #{f}" do
+        should_roundtrip_puz_file(f)
+      end
+    else
+      puts "File #{f} not found"
+    end
+  end
+end
+
+RSpec::Core::Runner.run([])

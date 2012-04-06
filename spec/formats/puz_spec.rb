@@ -248,14 +248,7 @@ describe Formats::Puz do
 
     %w{vanilla}.each do |fn|
       it "should correctly roundtrip #{fn}.puz" do
-        path = testfile_path("#{fn}.puz")
-        File.open(path, 'rb') do |puzfile|
-          puz = Formats::Puz.parse(puzfile)
-          out = StringIO.open('', 'wb') {|sio| puz.write(sio); sio.string}
-
-          puzfile.rewind
-          puzfile.read.inspect.should == out.inspect
-        end
+        should_roundtrip_puz_file testfile_path("#{fn}.puz")
       end
     end
   end

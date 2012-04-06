@@ -30,6 +30,20 @@ module TestfileHelper
   end
 end
 
+module Roundtripper
+  def should_roundtrip_puz_file(path)
+    File.open(path, 'rb:ASCII-8BIT') do |puzfile|
+      puz = Formats::Puz.parse(puzfile)
+      out = StringIO.open('', 'wb:ASCII-8BIT') {|sio| puz.write(sio); sio.string}
+      out.force_encoding('BINARY')
+
+      puzfile.rewind
+      puzfile.read.should == out
+    end
+  end
+end
+
 RSpec.configure do |c|
   include TestfileHelper
+  include Roundtripper
 end
