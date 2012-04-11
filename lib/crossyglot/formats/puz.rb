@@ -25,6 +25,13 @@ module Crossyglot
       # Range of header parts used in header checksum
       HEADER_CKSUM_RANGE = -5..-1
 
+      EXTRA_HEADER_FORMAT = 'a4CC'
+      EXTRA_HEADER_LENGTH = 8
+
+      # Map of attributes on Cell to mask bit to check against value for cell in GEXT extra section
+      GEXT_MASKS = {is_marked_incorrect: 0x20, was_previously_marked_incorrect: 0x10,
+                    was_revealed: 0x40} #, is_circled: 0x80}
+
       # defer given methods to the headers hash
       def self.proxy_to_headers(*meth_names)
         meth_names.each do |meth_name|
@@ -84,6 +91,8 @@ module Crossyglot
         parse_clues(puzfile)
 
         self.notes = next_string(puzfile)
+
+        parse_extras(puzfile)
       end
 
       def parse_header(puzfile)
@@ -143,6 +152,28 @@ module Crossyglot
       def parse_clues(puzfile)
         clues.clear
         headers[:clue_count].times {clues << next_string(puzfile)}
+      end
+
+      def parse_extras(puzfile)
+        while header = puzfile.gets(EXTRA_HEADER_LENGTH)
+          if header.size == EXTRA_HEADER_LENGTH
+            title, length, cksum = header.unpack(EXTRA_HEADER_FORMAT)
+            body = puzfile.gets(length + 1).chomp(?\0)
+
+            meth = "parse_#{title.downcase}_extra"
+            send(meth, body)  if respond_to?(meth, true)
+            # TODO - otherwise save unknown extra sections for roundtripping
+            # TODO - save extra section order for roundtripping???
+          end
+        end
+      end
+
+      def parse_gext_extra(extra_body)
+        extra_body.bytes.zip(cells).each do |b, cell|
+          GEXT_MASKS.each do |cell_meth, mask|
+            cell.send "#{cell_meth}=", !(b & mask).zero?
+          end
+        end
       end
 
       # Next \0 delimited string from file, nil if of empty length

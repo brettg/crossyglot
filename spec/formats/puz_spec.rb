@@ -140,16 +140,16 @@ describe Formats::Puz do
 
     describe 'for a fairly vanilla .puz' do
       before(:all) do
-        @puzzle = Formats::Puz.new.parse(testfile_path('vanilla.puz'))
+        @vanilla_puzzle = Formats::Puz.new.parse(testfile_path('vanilla.puz'))
       end
 
       it 'should be a Formats::Puz' do
-        @puzzle.should be_kind_of(Formats::Puz)
+        @vanilla_puzzle.should be_kind_of(Formats::Puz)
       end
 
       describe 'setting #headers' do
         it 'should set it to the same length as HEADER_PARTS' do
-          @puzzle.headers.size.should == Formats::Puz::HEADER_PARTS.size
+          @vanilla_puzzle.headers.size.should == Formats::Puz::HEADER_PARTS.size
         end
 
         {puzzle_cksum: 41078,
@@ -166,50 +166,49 @@ describe Formats::Puz do
          puzzle_type: 1,
          solution_state: 0}.each do |header, val|
           it "should set :#{header}" do
-            @puzzle.headers[header].should == val
+            @vanilla_puzzle.headers[header].should == val
           end
         end
       end
 
       it 'should set #version' do
-        @puzzle.version.should == '1.2c'
+        @vanilla_puzzle.version.should == '1.2c'
       end
       it 'should set #width' do
-        @puzzle.width.should == 15
+        @vanilla_puzzle.width.should == 15
       end
       it 'should set #height' do
-        @puzzle.height.should == 15
+        @vanilla_puzzle.height.should == 15
       end
 
       it 'should set #title' do
-        @puzzle.title.should == 'LA Times, Mon, Mar 26, 2012'
+        @vanilla_puzzle.title.should == 'LA Times, Mon, Mar 26, 2012'
       end
       it 'should set #author' do
-        @puzzle.author.should == 'Ki Lee / Ed. Rich Norris'
+        @vanilla_puzzle.author.should == 'Ki Lee / Ed. Rich Norris'
       end
       it 'should set #copyright' do
-        @puzzle.copyright.should == "\xA9 2012 Tribune Media Services, Inc."
+        @vanilla_puzzle.copyright.should == "\xA9 2012 Tribune Media Services, Inc."
       end
       it 'should set #clues' do
-        @puzzle.clues.should_not be_empty
-        @puzzle.clues.size.should == 76
-        @puzzle.clues.first.should == 'Filled tortilla'
-        @puzzle.clues.last.should == 'Quiz, e.g.'
+        @vanilla_puzzle.clues.should_not be_empty
+        @vanilla_puzzle.clues.size.should == 76
+        @vanilla_puzzle.clues.first.should == 'Filled tortilla'
+        @vanilla_puzzle.clues.last.should == 'Quiz, e.g.'
       end
       it 'should set #notes' do
-        @puzzle.notes.should be_nil
+        @vanilla_puzzle.notes.should be_nil
       end
-      # FIXME - this test could be a lot more succinct if Cell#== just compared internals
       it 'should set #cells' do
-        @puzzle.cells.should_not be_nil
-        @puzzle.cells.size.should == 225
+        @vanilla_puzzle.cells.should_not be_nil
+        @vanilla_puzzle.cells.size.should == 225
 
         {0 => [?T, false, true, true, 1], 1 => [?A, false, false, true, 2],
          4 => [nil, true, false, false, nil], 15 => [?A, false, true, false, 14],
          16 => [?S, false, false, false, nil], -1 => [?T, false, false, false, nil]
         }.each do |idx, cell_props|
           sol, blk, acr, dwn, num = cell_props
-          cell = @puzzle.cells[idx]
+          cell = @vanilla_puzzle.cells[idx]
           cell.solution.should == sol
           cell.black?.should == blk
           cell.across?.should == acr
@@ -218,17 +217,39 @@ describe Formats::Puz do
         end
       end
     end
+
+    before(:all) do
+      @partially_filled_puzzle = Formats::Puz.new.parse(testfile_path('partially-filled.puz'))
+    end
     describe 'for a puzzle with the letters filled in' do
-      let(:puzzle) {Formats::Puz.new.parse(testfile_path('partially-filled.puz'))}
       it 'should set solution values to relevant cells' do
         {[0, 0] => ?A, [1, 0] => ?F, [2, 0] => ?T, [3, 0] => ?E, [4, 0] => ?R, [9, 0] => ?E,
          [4, 1] => ?A, [4, 2] => ?M, [7, 2] => ?K, [8, 2] => ?D, [4, 3] => ?B, [4, 4] => ?L,
          [4, 5] => ?E, [4, 6] => ?D, [0, 1] => nil}.each do |coords, f|
-          puzzle.cell_at(*coords).fill.should == f
+          cell = @partially_filled_puzzle.cell_at(*coords)
+          cell.fill.should eq(f), "cell at #{coords.inspect} should == #{f}"
         end
       end
     end
-    describe 'for a puzzle cell with rebus cells' do
+    describe 'for a puzzle with checked and revealed cells' do
+      it 'should set cells marked_incorrect?' do
+        @partially_filled_puzzle.cell_at(8, 2).should be_marked_incorrect
+      end
+      it 'should set cells previously_marked_incorrect?' do
+        @partially_filled_puzzle.cell_at(9, 0).should be_previously_marked_incorrect
+      end
+      it 'should set cells revealed?' do
+        @partially_filled_puzzle.cell_at(7, 2).should be_revealed
+      end
+    end
+    describe 'for a puzzle with timer data' do
+      it 'should set timer_at'
+      it 'should set timer_running'
+    end
+    describe 'for a puzzle with circled cells' do
+      it 'should set the correct cells to circled'
+    end
+    describe 'for a puzzle with rebus cells' do
       it 'should set the rebus value of the appropriate cells'
     end
     describe 'for a puzzle with a scambled solution' do
@@ -239,6 +260,9 @@ describe Formats::Puz do
     end
     describe 'for a puzzled with unchecked cells' do
       it 'should not give numbers to cells that start words of fewer than 3 letters'
+    end
+    describe 'for a puzzle with user entered rebus cells' do
+      it 'should set the user entries to the fill of the relevant cells'
     end
   end
 

@@ -46,6 +46,13 @@ describe Cell do
     end
   end
 
+  describe '#rebus?' do
+    it 'should be true if the solution\'s length is > 1'
+  end
+  describe '#rebus_fill?' do
+    it 'should be true if more than one letter is filled in'
+  end
+
   describe '#across?' do
     it 'should be true if @has_across_clue is true and number is set' do
       c = Cell.new
