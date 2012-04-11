@@ -25,7 +25,7 @@ module Crossyglot
       # Range of header parts used in header checksum
       HEADER_CKSUM_RANGE = -5..-1
 
-      EXTRA_HEADER_FORMAT = 'a4CC'
+      EXTRA_HEADER_FORMAT = 'a4vv'
       EXTRA_HEADER_LENGTH = 8
 
       # Map of attributes on Cell to mask bit to check against value for cell in GEXT extra section
@@ -204,6 +204,7 @@ module Crossyglot
         io.write([title, author, copyright].join(?\0) + ?\0)
         io.write(clues.join(?\0) + ?\0)
         io.write((notes || '') + ?\0)
+        io.write(extras_data)
       end
 
       def header_data
@@ -221,6 +222,31 @@ module Crossyglot
 
       def fill_data
         cells.map {|c| c.fill || (c.black? ? ?. : ?-)}.join
+      end
+
+      def extras_data
+        [ltim_section_data, gext_section_data].join
+      end
+
+      def gext_section_data
+        if cells.any? {|c| c.marked_incorrect? || c.previously_marked_incorrect? || c.revealed?}
+          masks = cells.map do |cell|
+            GEXT_MASKS.inject(0) do |accum, k_v|
+              at, mask = k_v
+              cell.send(at) ? accum | mask : accum
+            end
+          end
+          extras_section_data('GEXT', masks.pack('C*'))
+        end
+      end
+      def ltim_section_data
+        if timer_at || timer_running?
+          extras_section_data('LTIM', [timer_at.to_i, timer_running? ? '0' : '1'].join(','))
+        end
+      end
+
+      def extras_section_data(title, body)
+        [title, body.size, checksum(body)].pack(EXTRA_HEADER_FORMAT) + body + ?\0
       end
 
       #---------------------------------------

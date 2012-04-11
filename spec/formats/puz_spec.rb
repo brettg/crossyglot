@@ -282,9 +282,13 @@ describe Formats::Puz do
       end
     end
 
-    %w{vanilla}.each do |fn|
-      it "should correctly roundtrip #{fn}.puz" do
-        should_roundtrip_puz_file testfile_path("#{fn}.puz")
+    # Testing via round tripping seems like the easiest and most complete way to exercise all the
+    # writing logic.
+    describe 'should correctly roundtrip' do
+      %w{vanilla partially-filled}.each do |fn|
+        it "#{fn}.puz" do
+          should_roundtrip_puz_file testfile_path("#{fn}.puz")
+        end
       end
     end
   end
@@ -309,6 +313,41 @@ describe Formats::Puz do
       puz.cells << Cell.new(nil, false, false, 'D')
 
       puz.send(:fill_data).should == '--C.-'
+    end
+  end
+
+  describe '#extras_data' do
+    it 'should be empty by default' do
+      puz.send(:extras_data).should == ''
+    end
+    describe 'should include GEXT if' do
+      [:is_marked_incorrect, :was_previously_marked_incorrect, :was_revealed].each do |attr|
+        it "a cell has #{attr} set" do
+          cell = Cell.new
+          cell.send("#{attr}=", true)
+          puz.cells << cell
+
+          puz.send(:extras_data).should match(/GEXT/)
+        end
+      end
+    end
+    describe 'should include LTIM if' do
+      it 'timer_at is set' do
+        puz.timer_at = 0
+        puz.send(:extras_data).should match(/LTIM/)
+        puz.timer_at = 200
+        puz.send(:extras_data).should match(/LTIM/)
+      end
+      it 'timer_running is true' do
+        puz.is_timer_running = true
+        puz.send(:extras_data).should match(/LTIM/)
+      end
+    end
+  end
+
+  describe '#extras_section_data' do
+    it 'should return extras section with header and body' do
+      puz.send(:extras_section_data, 'LTIM', '180,0').should == "LTIM\x05\x00\\\x10180,0\x00"
     end
   end
 end

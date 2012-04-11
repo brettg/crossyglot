@@ -2,8 +2,8 @@ module Crossyglot
   # One square in the puzzle grid
   class Cell
     attr_accessor :number, :solution, :fill
-    attr_writer :has_across_clue, :has_down_clue, :is_marked_incorrect, :is_black, :is_circled,
-                :was_previously_marked_incorrect, :was_revealed
+    attr_accessor :has_across_clue, :has_down_clue, :is_marked_incorrect, :is_black, :is_circled,
+                  :was_previously_marked_incorrect, :was_revealed
 
     # Returns a new Cell with is_black set to true
     def self.black

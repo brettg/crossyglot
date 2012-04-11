@@ -38,7 +38,7 @@ module Roundtripper
       out.force_encoding('BINARY')
 
       puzfile.rewind
-      puzfile.read.should == out
+      out.should == puzfile.read
     end
   end
 end
