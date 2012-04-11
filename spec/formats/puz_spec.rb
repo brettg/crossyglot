@@ -117,9 +117,13 @@ describe Formats::Puz do
   end
 
   describe '#parse' do
+    before(:all) do
+      @vanilla_puzzle = Formats::Puz.new.parse(testfile_path('vanilla.puz'))
+      @partially_filled_puzzle = Formats::Puz.new.parse(testfile_path('partially-filled.puz'))
+    end
+
     it 'should accept a path' do
-      puz = Formats::Puz.new.parse(testfile_path('vanilla.puz'))
-      puz.title.should == 'LA Times, Mon, Mar 26, 2012'
+      @vanilla_puzzle.title.should == 'LA Times, Mon, Mar 26, 2012'
     end
     it 'should accept an IO' do
       puz = File.open(testfile_path('vanilla.puz'), 'rb') do |f|
@@ -139,10 +143,6 @@ describe Formats::Puz do
     end
 
     describe 'for a fairly vanilla .puz' do
-      before(:all) do
-        @vanilla_puzzle = Formats::Puz.new.parse(testfile_path('vanilla.puz'))
-      end
-
       it 'should be a Formats::Puz' do
         @vanilla_puzzle.should be_kind_of(Formats::Puz)
       end
@@ -218,9 +218,6 @@ describe Formats::Puz do
       end
     end
 
-    before(:all) do
-      @partially_filled_puzzle = Formats::Puz.new.parse(testfile_path('partially-filled.puz'))
-    end
     describe 'for a puzzle with the letters filled in' do
       it 'should set solution values to relevant cells' do
         {[0, 0] => ?A, [1, 0] => ?F, [2, 0] => ?T, [3, 0] => ?E, [4, 0] => ?R, [9, 0] => ?E,
@@ -243,8 +240,13 @@ describe Formats::Puz do
       end
     end
     describe 'for a puzzle with timer data' do
-      it 'should set timer_at'
-      it 'should set timer_running'
+      it 'should set timer_at' do
+        @partially_filled_puzzle.timer_at.should == 180
+      end
+      it 'should set timer_running?' do
+        @vanilla_puzzle.should_not be_timer_running
+        @partially_filled_puzzle.should be_timer_running
+      end
     end
     describe 'for a puzzle with circled cells' do
       it 'should set the correct cells to circled'

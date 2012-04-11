@@ -28,6 +28,14 @@ describe Puzzle do
     end
   end
 
+  describe '#timer_running?' do
+    it 'should be true if is_timer_running is set to true' do
+      puzzle.should_not be_timer_running
+      puzzle.is_timer_running = true
+      puzzle.should be_timer_running
+    end
+  end
+
   describe '#cell_at' do
     before do
       @puzzle = Puzzle.new
@@ -81,6 +89,10 @@ describe Puzzle do
     end
     it 'shoud return hash of clues keyed by number for #downs' do
       @puzzle.downs.should == {1 => '1down', 2 => '2down', 3 => '3down', 5 => '5down'}
+    end
+    it 'should freeze both hashes' do
+      @puzzle.acrosses.should be_frozen
+      @puzzle.downs.should be_frozen
     end
 
     it 'should both be nil for a puzzle that has no clues or cells' do

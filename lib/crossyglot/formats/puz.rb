@@ -160,7 +160,7 @@ module Crossyglot
             title, length, cksum = header.unpack(EXTRA_HEADER_FORMAT)
             body = puzfile.gets(length + 1).chomp(?\0)
 
-            meth = "parse_#{title.downcase}_extra"
+            meth = "parse_#{title.downcase}_section"
             send(meth, body)  if respond_to?(meth, true)
             # TODO - otherwise save unknown extra sections for roundtripping
             # TODO - save extra section order for roundtripping???
@@ -168,12 +168,17 @@ module Crossyglot
         end
       end
 
-      def parse_gext_extra(extra_body)
-        extra_body.bytes.zip(cells).each do |b, cell|
+      def parse_gext_section(section_body)
+        section_body.bytes.zip(cells).each do |b, cell|
           GEXT_MASKS.each do |cell_meth, mask|
             cell.send "#{cell_meth}=", !(b & mask).zero?
           end
         end
+      end
+
+      def parse_ltim_section(section_body)
+        self.timer_at, running = section_body.split(',').map(&:to_i)
+        self.is_timer_running = running.zero?
       end
 
       # Next \0 delimited string from file, nil if of empty length

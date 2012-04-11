@@ -3,10 +3,13 @@ module Crossyglot
   class Puzzle
     attr_accessor :author, :copyright, :notes, :title
     attr_accessor :height, :width
+    attr_accessor :timer_at, :is_timer_running
 
     def self.parse(path)
       Formats::Puz.new.parse(path)
     end
+
+    def timer_running?; !!@is_timer_running end
 
     def cells
       @cells ||= []
@@ -45,7 +48,7 @@ module Crossyglot
             clue_index += 1
           end
           accum
-        end
+        end.freeze
       end
     end
   end
