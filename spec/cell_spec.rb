@@ -11,11 +11,12 @@ describe Cell do
       cell.solution.should be_nil
     end
     it 'should set number, down, across, and solution' do
-      c = Cell.new(14, true, false, 'A')
+      c = Cell.new(14, true, false, 'A', 'B')
       c.number.should == 14
       c.should be_across
       c.should_not be_down
       c.solution.should == 'A'
+      c.fill.should == 'B'
     end
   end
 

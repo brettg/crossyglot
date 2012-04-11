@@ -111,7 +111,7 @@ module Crossyglot
 
         cells.clear
 
-        solution.each_char do |sol|
+        solution.each_char.with_index do |sol, idx|
           cells << if ?. == sol
             Cell.black
           else
@@ -121,8 +121,9 @@ module Crossyglot
             across = !left_cell || left_cell.black?
             down = !above_cell || above_cell.black?
             number = (count += 1)  if across || down
+            c_fill = fill[idx] == ?- ? nil : fill[idx]
 
-            Cell.new(number, across, down, sol)
+            Cell.new(number, across, down, sol, c_fill)
           end
 
           x += 1

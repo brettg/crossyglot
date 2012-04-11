@@ -218,8 +218,15 @@ describe Formats::Puz do
         end
       end
     end
-    describe 'for a puzzle with the solution filled in' do
-      it 'should set solution values to relevant cells'
+    describe 'for a puzzle with the letters filled in' do
+      let(:puzzle) {Formats::Puz.new.parse(testfile_path('partially-filled.puz'))}
+      it 'should set solution values to relevant cells' do
+        {[0, 0] => ?A, [1, 0] => ?F, [2, 0] => ?T, [3, 0] => ?E, [4, 0] => ?R, [9, 0] => ?E,
+         [4, 1] => ?A, [4, 2] => ?M, [7, 2] => ?K, [8, 2] => ?D, [4, 3] => ?B, [4, 4] => ?L,
+         [4, 5] => ?E, [4, 6] => ?D, [0, 1] => nil}.each do |coords, f|
+          puzzle.cell_at(*coords).fill.should == f
+        end
+      end
     end
     describe 'for a puzzle cell with rebus cells' do
       it 'should set the rebus value of the appropriate cells'
@@ -229,6 +236,9 @@ describe Formats::Puz do
     end
     describe 'for a diagramless puzzle' do
       it 'should be #diagramless?'
+    end
+    describe 'for a puzzled with unchecked cells' do
+      it 'should not give numbers to cells that start words of fewer than 3 letters'
     end
   end
 

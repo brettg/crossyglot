@@ -11,11 +11,12 @@ module Crossyglot
     end
 
     # Create a new Cell and set basic attributes
-    def initialize(number=nil, across=false, down=false, solution=nil)
+    def initialize(number=nil, across=false, down=false, solution=nil, fill=nil)
       self.number = number
       self.has_across_clue = across
       self.has_down_clue = down
       self.solution = solution
+      self.fill = fill
     end
 
     def circled?; !!@is_circled end
