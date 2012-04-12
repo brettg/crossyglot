@@ -120,6 +120,7 @@ describe Formats::Puz do
     before(:all) do
       @vanilla_puzzle = Formats::Puz.new.parse(testfile_path('vanilla.puz'))
       @partially_filled_puzzle = Formats::Puz.new.parse(testfile_path('partially-filled.puz'))
+      @rebus_puzzle = Formats::Puz.new.parse(testfile_path('rebus.puz'))
     end
 
     it 'should accept a path' do
@@ -252,7 +253,13 @@ describe Formats::Puz do
       it 'should set the correct cells to circled'
     end
     describe 'for a puzzle with rebus cells' do
-      it 'should set the rebus value of the appropriate cells'
+      it 'should set the rebus value of the appropriate cells' do
+        %w{FA FA MI MI RE RE DO DO DO SOL SOL LA LA SOL}.each_with_index do |ans, idx|
+          c = @rebus_puzzle.cells[idx + 105]
+          c.should be_rebus
+          c.solution.should == ans
+        end
+      end
     end
     describe 'for a puzzle with a scambled solution' do
       it 'should be #scrambled?'
@@ -285,7 +292,7 @@ describe Formats::Puz do
     # Testing via round tripping seems like the easiest and most complete way to exercise all the
     # writing logic.
     describe 'should correctly roundtrip' do
-      %w{vanilla partially-filled}.each do |fn|
+      %w{vanilla partially-filled rebus}.each do |fn|
         it "#{fn}.puz" do
           should_roundtrip_puz_file testfile_path("#{fn}.puz")
         end
@@ -294,12 +301,12 @@ describe Formats::Puz do
   end
 
   describe '#solution_data' do
-    it 'should return a string with the solution letters and dots for black cells' do
+    it 'should return a string with the (first) solution letters and dots for black cells' do
       puz.cells << Cell.new(nil, false, false, 'A')
       puz.cells << Cell.new(nil, false, false, 'B')
       puz.cells << Cell.new(nil, false, false, 'C')
       puz.cells << Cell.black
-      puz.cells << Cell.new(nil, false, false, 'D')
+      puz.cells << Cell.new(nil, false, false, 'DD')
 
       puz.send(:solution_data).should == 'ABC.D'
     end
@@ -342,6 +349,11 @@ describe Formats::Puz do
         puz.is_timer_running = true
         puz.send(:extras_data).should match(/LTIM/)
       end
+    end
+    it 'should include both GRBS and RTBL if a cell has a rebus' do
+      puz.cells << Cell.new(1, true, true, 'ABC')
+      puz.send(:extras_data).should match(/GRBS/)
+      puz.send(:extras_data).should match(/RTBL/)
     end
   end
 

@@ -47,10 +47,20 @@ describe Cell do
   end
 
   describe '#rebus?' do
-    it 'should be true if the solution\'s length is > 1'
+    it 'should be true if the solution\'s length is > 1' do
+      Cell.new.should_not be_rebus
+      Cell.new(10, true, true, 'A').should_not be_rebus
+      Cell.new(10, true, true, 'AB').should be_rebus
+    end
   end
   describe '#rebus_fill?' do
-    it 'should be true if more than one letter is filled in'
+    it 'should be true if more than one letter is filled in' do
+      Cell.new.should_not be_rebus_fill
+      Cell.new(10, true, true, 'A').should_not be_rebus_fill
+      Cell.new(10, true, true, 'AB', 'A').should_not be_rebus_fill
+      Cell.new(10, true, true, 'A', 'AB').should be_rebus_fill
+      Cell.new(10, true, true, 'AB', 'AB').should be_rebus_fill
+    end
   end
 
   describe '#across?' do

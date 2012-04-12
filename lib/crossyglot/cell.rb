@@ -27,5 +27,13 @@ module Crossyglot
 
     def across?; !!(number && @has_across_clue) end
     def down?;  !!(number && @has_down_clue) end
+
+    def rebus?
+      solution && solution.size > 1
+    end
+    # True if the user filled in value is a rebus
+    def rebus_fill?
+      fill && fill.size > 1
+    end
   end
 end

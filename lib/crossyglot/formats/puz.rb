@@ -181,6 +181,28 @@ module Crossyglot
         self.is_timer_running = running.zero?
       end
 
+      # Both are needed so just store into instance var until we have both
+      def parse_grbs_section(section_body)
+        @grbs_section_body = section_body
+        parse_rtbl_and_grbs_sections
+      end
+      def parse_rtbl_section(section_body)
+        @rtbl_section_body = section_body
+        parse_rtbl_and_grbs_sections
+      end
+      def parse_rtbl_and_grbs_sections
+        if @grbs_section_body && @rtbl_section_body
+          rebus_pairs = @rtbl_section_body.split(';').map {|s| p = s.split(':'); [p[0].to_i, p[1]]}
+          @original_rebuses_by_number = Hash[rebus_pairs]
+
+          @grbs_section_body.bytes.with_index do |b, idx|
+            if b > 0
+              cells[idx].solution = @original_rebuses_by_number[b - 1]
+            end
+          end
+        end
+      end
+
       # Next \0 delimited string from file, nil if of empty length
       def next_string(puzfile)
         s = puzfile.gets(?\0).chomp(?\0)
@@ -203,7 +225,8 @@ module Crossyglot
         io.write(fill_data)
         io.write([title, author, copyright].join(?\0) + ?\0)
         io.write(clues.join(?\0) + ?\0)
-        io.write((notes || '') + ?\0)
+        io.write(notes)
+        io.write(?\0)
         io.write(extras_data)
       end
 
@@ -217,7 +240,7 @@ module Crossyglot
       end
 
       def solution_data
-        cells.map {|c| c.black? ? ?. : c.solution}.join
+        cells.map {|c| c.black? ? ?. : c.solution[0]}.join
       end
 
       def fill_data
@@ -225,7 +248,7 @@ module Crossyglot
       end
 
       def extras_data
-        [ltim_section_data, gext_section_data].join
+        [ltim_section_data, gext_section_data, grbs_and_rtbl_section_data].join
       end
 
       def gext_section_data
@@ -242,6 +265,24 @@ module Crossyglot
       def ltim_section_data
         if timer_at || timer_running?
           extras_section_data('LTIM', [timer_at.to_i, timer_running? ? '0' : '1'].join(','))
+        end
+      end
+
+      def grbs_and_rtbl_section_data
+        if cells.any?(&:rebus?)
+          rebus_strings = cells.select(&:rebus?).map(&:solution)
+          # Preserve the original numbering, but also allow for new rebuses
+          old_numbers = (@original_rebuses_by_number || {}).invert
+          c = old_numbers.values.max || 0
+          rebuses = rebus_strings.inject({}) do |accum, s|
+            accum[s] = old_numbers[s] || (c += 1)
+            accum
+          end
+
+          grbs_body = cells.map {|c| c.rebus? ? rebuses[c.solution] + 1 : 0}.pack('C*')
+          rtbl_body = rebuses.sort_by{|v, n| n}.map{|v, n| '%2d:%s' % [n, v]}.join(';') + ';'
+
+          extras_section_data('GRBS', grbs_body) + extras_section_data('RTBL', rtbl_body)
         end
       end
 
