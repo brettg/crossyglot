@@ -231,11 +231,11 @@ describe Formats::Puz do
       end
     end
     describe 'for a puzzle with checked and revealed cells' do
-      it 'should set cells marked_incorrect?' do
-        @partially_filled_puzzle.cell_at(8, 2).should be_marked_incorrect
+      it 'should set cells incorrect?' do
+        @partially_filled_puzzle.cell_at(8, 2).should be_incorrect
       end
-      it 'should set cells previously_marked_incorrect?' do
-        @partially_filled_puzzle.cell_at(9, 0).should be_previously_marked_incorrect
+      it 'should set cells previously_incorrect?' do
+        @partially_filled_puzzle.cell_at(9, 0).should be_previously_incorrect
       end
       it 'should set cells revealed?' do
         @partially_filled_puzzle.cell_at(7, 2).should be_revealed
@@ -334,7 +334,7 @@ describe Formats::Puz do
       puz.send(:extras_data).should == ''
     end
     describe 'should include GEXT if' do
-      [:is_marked_incorrect, :was_previously_marked_incorrect, :was_revealed].each do |attr|
+      [:is_incorrect, :was_previously_incorrect, :was_revealed].each do |attr|
         it "a cell has #{attr} set" do
           cell = Cell.new
           cell.send("#{attr}=", true)

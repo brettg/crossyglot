@@ -36,8 +36,8 @@ describe Cell do
     end
   end
 
-  {is_marked_incorrect: :marked_incorrect?, is_black: :black?, is_circled: :circled?,
-   was_previously_marked_incorrect: :previously_marked_incorrect?, was_revealed: :revealed?
+  {is_incorrect: :incorrect?, is_black: :black?, is_circled: :circled?,
+   was_previously_incorrect: :previously_incorrect?, was_revealed: :revealed?
   }.each do |attr, predicate|
     describe "##{predicate}" do
       it "should be true when @#{attr} is true" do
