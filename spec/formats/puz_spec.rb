@@ -63,7 +63,7 @@ describe Formats::Puz do
       puz.clues << 'The letter before B'
       puz.send(:puzzle_cksum).should == 35852
 
-      puz.cells << Cell.new(1, true, true, 'B')
+      puz.cells << Cell.new('B', number: 1, had_across_clue: 1, had_down_clue: 1)
       puz.send(:puzzle_cksum).should == 18374
 
       puz.title = ''
@@ -102,7 +102,7 @@ describe Formats::Puz do
     it 'should do a bunch of funky nonsense and calculate correctly' do
       puz.headers.merge!(width: 1, height: 1, clue_count: 1, version: '1.2', puzzle_type: 1,
                          solution_state: 0)
-      puz.cells << Cell.new(1, true, true, 'B')
+      puz.cells << Cell.new('B', number: 1, had_across_clue: 1, had_down_clue: 1)
       puz.title = 'i cheated test'
       puz.author = 'the author'
       puz.copyright = '2000'
@@ -121,6 +121,7 @@ describe Formats::Puz do
       @vanilla_puzzle = Formats::Puz.new.parse(testfile_path('vanilla.puz'))
       @partially_filled_puzzle = Formats::Puz.new.parse(testfile_path('partially-filled.puz'))
       @rebus_puzzle = Formats::Puz.new.parse(testfile_path('rebus.puz'))
+      # @unchecked_puzzle = Formats::Puz.new.parse(testfile_path('unchecked.puz'))
     end
 
     it 'should accept a path' do
@@ -268,7 +269,12 @@ describe Formats::Puz do
       it 'should be #diagramless?'
     end
     describe 'for a puzzled with unchecked cells' do
-      it 'should not give numbers to cells that start words of fewer than 3 letters'
+      xit 'should not give numbers to cells that start words of fewer than 3 letters' do
+        c = @unchecked_puzzle.cell_at(6, 5)
+        c.number.should be_nil
+        c.should_not be_across
+        c.should_not be_down
+      end
     end
     describe 'for a puzzle with user entered rebus cells' do
       it 'should set the user entries to the fill of the relevant cells'
@@ -302,11 +308,11 @@ describe Formats::Puz do
 
   describe '#solution_data' do
     it 'should return a string with the (first) solution letters and dots for black cells' do
-      puz.cells << Cell.new(nil, false, false, 'A')
-      puz.cells << Cell.new(nil, false, false, 'B')
-      puz.cells << Cell.new(nil, false, false, 'C')
+      puz.cells << Cell.new('A')
+      puz.cells << Cell.new('B')
+      puz.cells << Cell.new('C')
       puz.cells << Cell.black
-      puz.cells << Cell.new(nil, false, false, 'DD')
+      puz.cells << Cell.new('DD')
 
       puz.send(:solution_data).should == 'ABC.D'
     end
@@ -314,10 +320,10 @@ describe Formats::Puz do
 
   describe '#fill_data' do
     it 'should return a string with a fill character for each cell with fill, a . or - otherwise' do
-      3.times {puz.cells << Cell.new(nil, false, false, 'A')}
+      3.times {puz.cells << Cell.new('A')}
       puz.cells.last.fill = 'C'
       puz.cells << Cell.black
-      puz.cells << Cell.new(nil, false, false, 'D')
+      puz.cells << Cell.new('D')
 
       puz.send(:fill_data).should == '--C.-'
     end
@@ -351,7 +357,7 @@ describe Formats::Puz do
       end
     end
     it 'should include both GRBS and RTBL if a cell has a rebus' do
-      puz.cells << Cell.new(1, true, true, 'ABC')
+      puz.cells << Cell.new('ABC')
       puz.send(:extras_data).should match(/GRBS/)
       puz.send(:extras_data).should match(/RTBL/)
     end

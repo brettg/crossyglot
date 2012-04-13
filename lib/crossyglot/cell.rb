@@ -11,12 +11,13 @@ module Crossyglot
     end
 
     # Create a new Cell and set basic attributes
-    def initialize(number=nil, across=false, down=false, solution=nil, fill=nil)
-      self.number = number
-      self.has_across_clue = across
-      self.has_down_clue = down
+    def initialize(solution=nil, attribs={})
       self.solution = solution
-      self.fill = fill
+      attribs.each do |k, v|
+        if respond_to?(setter = "#{k}=")
+          send(setter, v)
+        end
+      end
     end
 
     def circled?; !!@is_circled end

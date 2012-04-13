@@ -10,13 +10,21 @@ describe Cell do
       cell.should_not be_down
       cell.solution.should be_nil
     end
-    it 'should set number, down, across, and solution' do
-      c = Cell.new(14, true, false, 'A', 'B')
+    it 'should set fill with first arg' do
+      c = Cell.new('A')
+      c.solution.should == 'A'
+    end
+    it 'should set attributes with attr hash' do
+      c = Cell.new('A', fill: 'B', number: 14, has_across_clue: true, has_down_clue: false)
+      c.fill.should == 'B'
       c.number.should == 14
       c.should be_across
-      c.should_not be_down
-      c.solution.should == 'A'
-      c.fill.should == 'B'
+      c.has_down_clue.should == false
+    end
+    it 'should ignore unknown attributes' do
+      lambda {
+        Cell.new('B', unknown_thingy: 'pants')
+      }.should_not raise_error
     end
   end
 
@@ -49,17 +57,17 @@ describe Cell do
   describe '#rebus?' do
     it 'should be true if the solution\'s length is > 1' do
       Cell.new.should_not be_rebus
-      Cell.new(10, true, true, 'A').should_not be_rebus
-      Cell.new(10, true, true, 'AB').should be_rebus
+      Cell.new('A').should_not be_rebus
+      Cell.new('AB').should be_rebus
     end
   end
   describe '#rebus_fill?' do
     it 'should be true if more than one letter is filled in' do
       Cell.new.should_not be_rebus_fill
-      Cell.new(10, true, true, 'A').should_not be_rebus_fill
-      Cell.new(10, true, true, 'AB', 'A').should_not be_rebus_fill
-      Cell.new(10, true, true, 'A', 'AB').should be_rebus_fill
-      Cell.new(10, true, true, 'AB', 'AB').should be_rebus_fill
+      Cell.new('A').should_not be_rebus_fill
+      Cell.new('AB', fill: 'A').should_not be_rebus_fill
+      Cell.new('A', fill: 'AB').should be_rebus_fill
+      Cell.new('AB', fill: 'AB').should be_rebus_fill
     end
   end
 

@@ -132,7 +132,7 @@ module Crossyglot
             number = (count += 1)  if across || down
             c_fill = fill[idx] == ?- ? nil : fill[idx]
 
-            Cell.new(number, across, down, sol, c_fill)
+            Cell.new(sol, fill: c_fill, number: number, has_across_clue: across, has_down_clue: down)
           end
 
           x += 1

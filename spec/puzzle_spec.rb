@@ -80,7 +80,12 @@ describe Puzzle do
       [[1, true, true], [2, false, true], false,            [3, true, true],
        [4, true],       [],               [5, false, true], [],
        [6, true],       false,            [7, true],        []].each do |cell_init|
-        @puzzle.cells << (cell_init ? Cell.new(*cell_init) : Cell.black)
+        @puzzle.cells << if cell_init
+          num, across, down = cell_init
+          Cell.new('A', number: num, has_across_clue: across, has_down_clue: down)
+        else
+          Cell.black
+        end
       end
     end
     it 'shoud return hash of clues keyed by number for #acrosses' do
