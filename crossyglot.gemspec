@@ -7,9 +7,10 @@ Gem::Specification.new do |s|
   s.version     = Crossyglot::VERSION
   s.authors     = ['Brett Gibson']
   s.email       = ['gems@brettdgibson.com']
-  s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.summary     = 'Library for reading and writing various crossword puzzle formats'
+  s.description = 'Library for reading and writing various crossword puzzle formats'
+
+  s.required_ruby_version = '>= 1.9'
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {spec}/*`.split("\n")

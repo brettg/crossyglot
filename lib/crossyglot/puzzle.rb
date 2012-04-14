@@ -25,6 +25,13 @@ module Crossyglot
       end
     end
 
+    # Yields each cell along with x and y coord in grid (zero indexed)
+    def each_cell
+      cells.each_with_index do |c, idx|
+        yield c, *idx.divmod(width).reverse
+      end
+    end
+
     # All the across clues in a(n ordered) hash keyed by number
     def acrosses
       collect_clues_by_number(:across?)

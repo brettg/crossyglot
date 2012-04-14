@@ -37,7 +37,7 @@ watch('^lib/(.*)\.rb'        ) {run_all_specs}
 # Ctrl-\
 #
 Signal.trap 'INT' do
-  if @sent_an_int then
+  if @sent_an_int
     puts '  Shutting down now.'
     exit
   else

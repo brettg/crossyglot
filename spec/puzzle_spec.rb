@@ -67,6 +67,25 @@ describe Puzzle do
     end
   end
 
+  describe '#each_cell' do
+    it 'should yield each cell left to right top to bottom with x and y coords' do
+      cells = (1..15).map { Cell.new }
+      puzzle.cells.concat cells
+      wid = puzzle.width = 3
+      hgt = puzzle.height = 5
+
+      idx = 0
+      puzzle.each_cell do |cell, x, y|
+        (wid * y + x).should == idx
+        x.should_not >= wid
+        y.should_not >= hgt
+        cell.should == cells[idx]
+
+        idx += 1
+      end
+    end
+  end
+
   describe '#accross and #down' do
     #
     # Making grid like this ("-" is black):

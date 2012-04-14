@@ -9,7 +9,6 @@ task :spec do
   exec 'rspec'
 end
 
-
 desc 'Run the specs with watchr'
 task :watch do
   exec 'watchr spec/spec.watchr'
