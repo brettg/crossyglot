@@ -114,33 +114,18 @@ module Crossyglot
         solution = puzfile.gets(width * height)
         fill = puzfile.gets(width * height)
 
-        count = 0
-        x = 0
-        y = 0
-
         cells.clear
 
-        solution.each_char.with_index do |sol, idx|
+        # Extra to_a prevents a segfault on ruby 1.9.2 (fixed in 1.9.3)
+        solution.each_char.zip(fill.each_char.to_a) do |sol, fill|
           cells << if ?. == sol
             Cell.black
           else
-            above_cell = cell_at(x, y - 1)
-            left_cell = cell_at(x - 1, y)
-
-            across = !left_cell || left_cell.black?
-            down = !above_cell || above_cell.black?
-            number = (count += 1)  if across || down
-            c_fill = fill[idx] == ?- ? nil : fill[idx]
-
-            Cell.new(sol, fill: c_fill, number: number, has_across_clue: across, has_down_clue: down)
-          end
-
-          x += 1
-          if x == width
-            x = 0
-            y += 1
+            Cell.new(sol, fill: fill == ?- ? nil : fill)
           end
         end
+
+        renumber_cells!
       end
 
       def parse_string_sections(puzfile)
