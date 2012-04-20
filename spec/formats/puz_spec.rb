@@ -122,6 +122,7 @@ describe Formats::Puz do
       @partially_filled_puzzle = Formats::Puz.new.parse(testfile_path('partially-filled.puz'))
       @rebus_puzzle = Formats::Puz.new.parse(testfile_path('rebus.puz'))
       @unchecked_puzzle = Formats::Puz.new.parse(testfile_path('unchecked.puz'))
+      @circles_puzzle = Formats::Puz.new.parse(testfile_path('circles.puz'))
     end
 
     it 'should accept a path' do
@@ -251,7 +252,13 @@ describe Formats::Puz do
       end
     end
     describe 'for a puzzle with circled cells' do
-      it 'should set the correct cells to circled'
+      it 'should set the correct cells to circled' do
+        circled = [1, 16, 31, 33, 46, 48, 63, 65, 78, 80, 95, 97, 110, 112, 127, 129, 142, 144,
+                   159, 161, 174, 176, 191, 193, 206, 208, 223, 238]
+        @circles_puzzle.cells.each_with_index do |c, idx|
+          c.circled?.should == circled.include?(idx)
+        end
+      end
     end
     describe 'for a puzzle with rebus cells' do
       it 'should set the rebus value of the appropriate cells' do
@@ -276,6 +283,21 @@ describe Formats::Puz do
         c.should_not be_down
       end
     end
+    describe 'for a puzzle with notes' do
+      it 'should set the puzzle notes correctly' do
+        @unchecked_puzzle.notes.should == "Due to the unusual structure of this grid," +
+                                          " please note the following for solving in Across Lite" +
+                                          "\r\n\r\n" +
+                                          "Across Lite for Mac and Windows:\r\n" +
+                                          "Use arrow keys or mouse to select the interior squares" +
+                                          " to enter letters. Tab keys will not select them." +
+                                          " There is no clue associated with these interior" +
+                                          " squares.\r\n\r\n" +
+                                          "Across Lite for iPad:\r\n" +
+                                          "The interior letters CANNOT be entered in v3.0" +
+                                          " of the app. \r\n"
+      end
+    end
     describe 'for a puzzle with user entered rebus cells' do
       it 'should set the user entries to the fill of the relevant cells'
     end
@@ -298,7 +320,7 @@ describe Formats::Puz do
     # Testing via round tripping seems like the easiest and most complete way to exercise all the
     # writing logic.
     describe 'should correctly roundtrip' do
-      %w{vanilla partially-filled rebus unchecked}.each do |fn|
+      %w{vanilla partially-filled rebus unchecked circles}.each do |fn|
         it "#{fn}.puz" do
           should_roundtrip_puz_file testfile_path("#{fn}.puz")
         end

@@ -30,7 +30,7 @@ module Crossyglot
 
       # Map of attributes on Cell to mask bit to check against value for cell in GEXT extra section
       GEXT_MASKS = {is_incorrect: 0x20, was_previously_incorrect: 0x10,
-                    was_revealed: 0x40} #, is_circled: 0x80}
+                    was_revealed: 0x40, is_circled: 0x80}
 
       # defer given methods to the headers hash
       def self.proxy_to_headers(*meth_names)
@@ -237,7 +237,7 @@ module Crossyglot
       end
 
       def gext_section_data
-        if cells.any? {|c| c.incorrect? || c.previously_incorrect? || c.revealed?}
+        if cells.any? {|c| c.incorrect? || c.previously_incorrect? || c.revealed? || c.circled?}
           masks = cells.map do |cell|
             GEXT_MASKS.inject(0) do |accum, k_v|
               at, mask = k_v
