@@ -104,15 +104,15 @@ module Crossyglot
         # We want part of the header before the MAGIC, so go back a bit
         puzfile.pos -= MAGIC.size + 2
 
-        header_values = puzfile.gets(HEADER_LENGTH).unpack(HEADER_FORMAT)
+        header_values = puzfile.read(HEADER_LENGTH).unpack(HEADER_FORMAT)
         HEADER_PARTS.keys.each_with_index do |name, idx|
           self.headers[name] = header_values[idx]
         end
       end
 
       def parse_solution(puzfile)
-        solution = puzfile.gets(width * height)
-        fill = puzfile.gets(width * height)
+        solution = puzfile.read(width * height)
+        fill = puzfile.read(width * height)
 
         cells.clear
 
@@ -140,10 +140,10 @@ module Crossyglot
       end
 
       def parse_extras(puzfile)
-        while header = puzfile.gets(EXTRA_HEADER_LENGTH)
+        while header = puzfile.read(EXTRA_HEADER_LENGTH)
           if header.size == EXTRA_HEADER_LENGTH
             title, length, cksum = header.unpack(EXTRA_HEADER_FORMAT)
-            body = puzfile.gets(length + 1).chomp(?\0)
+            body = puzfile.read(length + 1).chomp(?\0)
 
             meth = "parse_#{title.downcase}_section"
             send(meth, body)  if respond_to?(meth, true)

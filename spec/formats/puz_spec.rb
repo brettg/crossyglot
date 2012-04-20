@@ -121,7 +121,7 @@ describe Formats::Puz do
       @vanilla_puzzle = Formats::Puz.new.parse(testfile_path('vanilla.puz'))
       @partially_filled_puzzle = Formats::Puz.new.parse(testfile_path('partially-filled.puz'))
       @rebus_puzzle = Formats::Puz.new.parse(testfile_path('rebus.puz'))
-      # @unchecked_puzzle = Formats::Puz.new.parse(testfile_path('unchecked.puz'))
+      @unchecked_puzzle = Formats::Puz.new.parse(testfile_path('unchecked.puz'))
     end
 
     it 'should accept a path' do
@@ -269,7 +269,7 @@ describe Formats::Puz do
       it 'should be #diagramless?'
     end
     describe 'for a puzzled with unchecked cells' do
-      xit 'should not give numbers to cells that start words of fewer than 3 letters' do
+      it 'should not give numbers to cells that start words of fewer than 3 letters' do
         c = @unchecked_puzzle.cell_at(6, 5)
         c.number.should be_nil
         c.should_not be_across
@@ -298,7 +298,7 @@ describe Formats::Puz do
     # Testing via round tripping seems like the easiest and most complete way to exercise all the
     # writing logic.
     describe 'should correctly roundtrip' do
-      %w{vanilla partially-filled rebus}.each do |fn|
+      %w{vanilla partially-filled rebus unchecked}.each do |fn|
         it "#{fn}.puz" do
           should_roundtrip_puz_file testfile_path("#{fn}.puz")
         end
