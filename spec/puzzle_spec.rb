@@ -38,32 +38,31 @@ describe Puzzle do
 
   describe '#cell_at' do
     before do
-      @puzzle = Puzzle.new
-      @puzzle.width = 5
-      @puzzle.height = 6
-      @puzzle.cells.concat (1..30).map {Cell.new}
+      puzzle.width = 5
+      puzzle.height = 6
+      puzzle.cells.concat (1..30).map {Cell.new}
     end
     it 'should return nil if x is out of bounds' do
-      @puzzle.cell_at(5, 0).should == nil
-      @puzzle.cell_at(-1, 0).should == nil
+      puzzle.cell_at(5, 0).should == nil
+      puzzle.cell_at(-1, 0).should == nil
     end
     it 'should return nil if y is out of bounds' do
-      @puzzle.cell_at(0, 6).should == nil
-      @puzzle.cell_at(0, -1).should == nil
+      puzzle.cell_at(0, 6).should == nil
+      puzzle.cell_at(0, -1).should == nil
     end
     it 'should return nil if cells is empty' do
-      @puzzle.cells.clear
-      @puzzle.cell_at(0, 0).should == nil
+      puzzle.cells.clear
+      puzzle.cell_at(0, 0).should == nil
     end
     it 'return cell based on width and height' do
-      @puzzle.cell_at(0, 0).should == @puzzle.cells.first
-      @puzzle.cell_at(4, 5).should == @puzzle.cells.last
+      puzzle.cell_at(0, 0).should == puzzle.cells.first
+      puzzle.cell_at(4, 5).should == puzzle.cells.last
 
-      @puzzle.cell_at(1, 0).should == @puzzle.cells[1]
-      @puzzle.cell_at(0, 1).should == @puzzle.cells[5]
+      puzzle.cell_at(1, 0).should == puzzle.cells[1]
+      puzzle.cell_at(0, 1).should == puzzle.cells[5]
 
-      @puzzle.cell_at(2, 3).should == @puzzle.cells[17]
-      @puzzle.cell_at(3, 2).should == @puzzle.cells[13]
+      puzzle.cell_at(2, 3).should == puzzle.cells[17]
+      puzzle.cell_at(3, 2).should == puzzle.cells[13]
     end
   end
 
@@ -126,4 +125,90 @@ describe Puzzle do
     end
   end
 
+  describe '#renumber_cells!' do
+    describe 'for a puzzle with words longer than min word length' do
+      before do
+        puzzle = Puzzle.new
+        grid = 'AAA.' +
+               'AAAA' +
+               '.AAA' +
+               'AAA.' +
+               'AAAA' +
+               '.AAA'
+        puzzle.width = 4
+        puzzle.height = 6
+        puzzle.cells.concat grid.chars.map{|l| l == ?. ? Cell.black : Cell.new(l)}
+        puzzle.renumber_cells!(2)
+      end
+      it 'should set has_across_clue true to cells with no open cell to the left' do
+        across_indices = [0, 4, 9, 12, 16, 21]
+        puzzle.cells.each_with_index do |c, idx|
+          unless c.black?
+            c.has_across_clue.should == across_indices.include?(idx)
+          end
+        end
+      end
+      it 'should set has_down_clue true to cells with no open cell above' do
+        down_indices = [0, 1, 2, 7, 12, 19]
+        puzzle.cells.each_with_index do |c, idx|
+          unless c.black?
+            c.has_down_clue.should == down_indices.include?(idx)
+          end
+        end
+      end
+      it 'should give a number to cells that have an across or down clue' do
+        nums = [1,   2,   3,   nil,
+                4,   nil, nil, 5,
+                nil, 6,   nil, nil,
+                7,   nil, nil, nil,
+                8,   nil, nil, 9,
+                nil, 10,  nil, nil]
+        puzzle.cells.zip(nums).each do |cell, num|
+          cell.number.should == num
+        end
+      end
+    end
+
+    describe 'for puzzles with varying word lengths given a shorter word length' do
+      it 'should not give shorter across words a number' do
+        puzzle.width = 2
+        puzzle.height = 1
+        puzzle.cells.concat 2.times.map { Cell.new('A') }
+
+        puzzle.renumber_cells!
+        puzzle.cells.first.should_not be_across
+        puzzle.cells.first.should_not be_down
+        puzzle.cells.first.number.should be_nil
+
+        puzzle.renumber_cells!(2)
+        puzzle.cells.first.should be_across
+        puzzle.cells.first.should_not be_down
+        puzzle.cells.first.number.should == 1
+      end
+      it 'should not give shorter down words a number' do
+        puzzle.width = 1
+        puzzle.height = 6
+        puzzle.cells.concat 6.times.map { Cell.new('A') }
+
+        puzzle.renumber_cells!(7)
+        puzzle.cells.first.should_not be_down
+        puzzle.cells.first.should_not be_across
+        puzzle.cells.first.number.should be_nil
+
+        puzzle.renumber_cells!(6)
+        puzzle.cells.first.should be_down
+        puzzle.cells.first.should_not be_across
+        puzzle.cells.first.number.should == 1
+      end
+      it 'should give numbers to all border cells with a min word length of one' do
+        puzzle.width = puzzle.height = 1
+        puzzle.cells << Cell.new('b')
+
+        puzzle.renumber_cells!(1)
+        puzzle.cells.first.number.should == 1
+        puzzle.cells.first.should be_down
+        puzzle.cells.first.should be_across
+      end
+    end
+  end
 end

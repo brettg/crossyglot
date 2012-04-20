@@ -42,6 +42,33 @@ module Crossyglot
       collect_clues_by_number(:down?, (acrosses || []).size)
     end
 
+    # (Re)assigns number, is_down and is_across to each non black cell based on their position in
+    # the grid and the minimum word length
+    def renumber_cells!(min_word_length=3)
+      num = 0
+      each_cell do |c, x, y|
+        unless c.black?
+          across = x == 0 || cell_at(x - 1, y).black?
+          across &&= (min_word_length - 1).times.all? do |n|
+            x1 = x + n + 1
+            x1 < width && !cell_at(x1, y).black?
+          end
+
+          down = y == 0 || cell_at(x, y - 1).black?
+          down &&= (min_word_length - 1).times.all? do |n|
+            y1 = y + n + 1
+            y1 < height && !cell_at(x, y1).black?
+          end
+
+          n = across || down ? num += 1 : nil
+
+          c.has_across_clue = across
+          c.has_down_clue = down
+          c.number = n
+        end
+      end
+    end
+
     private
 
     # create the has for acrosses or downs
