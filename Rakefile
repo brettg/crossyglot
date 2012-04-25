@@ -1,5 +1,5 @@
-require 'bundler/gem_tasks'
 require 'rdoc/task'
+require 'bundler/gem_tasks'
 
 desc 'Default: run specs.'
 task :default => :spec

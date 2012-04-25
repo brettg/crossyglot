@@ -28,6 +28,8 @@ module Crossyglot
       EXTRA_HEADER_FORMAT = 'a4vv'
       EXTRA_HEADER_LENGTH = 8
 
+      EXTRA_SECTIONS = %w{GEXT LTIM GRBS RTBL}
+
       # Map of attributes on Cell to mask bit to check against value for cell in GEXT extra section
       GEXT_MASKS = {is_incorrect: 0x20, was_previously_incorrect: 0x10,
                     was_revealed: 0x40, is_circled: 0x80}
@@ -140,6 +142,7 @@ module Crossyglot
       end
 
       def parse_extras(puzfile)
+        @original_extras_order = []
         while header = puzfile.read(EXTRA_HEADER_LENGTH)
           if header.size == EXTRA_HEADER_LENGTH
             title, length, cksum = header.unpack(EXTRA_HEADER_FORMAT)
@@ -148,7 +151,8 @@ module Crossyglot
             meth = "parse_#{title.downcase}_section"
             send(meth, body)  if respond_to?(meth, true)
             # TODO - otherwise save unknown extra sections for roundtripping
-            # TODO - save extra section order for roundtripping???
+
+            @original_extras_order << title
           end
         end
       end
@@ -233,28 +237,56 @@ module Crossyglot
       end
 
       def extras_data
-        [ltim_section_data, gext_section_data, grbs_and_rtbl_section_data].join
+        @grbs_body = @rbtl_body = nil
+
+        @original_extras_order ||= []
+        other_needed_sections = (EXTRA_SECTIONS - @original_extras_order).select do |s|
+          send("#{s.downcase}_section_needed?")
+        end
+
+        (@original_extras_order + other_needed_sections).map do |s|
+          extras_section_data(s, send("#{s.downcase}_section_data"))
+        end.join
       end
 
+      def gext_section_needed?
+        cells.any? {|c| c.incorrect? || c.previously_incorrect? || c.revealed? || c.circled?}
+      end
       def gext_section_data
-        if cells.any? {|c| c.incorrect? || c.previously_incorrect? || c.revealed? || c.circled?}
-          masks = cells.map do |cell|
-            GEXT_MASKS.inject(0) do |accum, k_v|
-              at, mask = k_v
-              cell.send(at) ? accum | mask : accum
-            end
+        masks = cells.map do |cell|
+          GEXT_MASKS.inject(0) do |accum, k_v|
+            at, mask = k_v
+            cell.send(at) ? accum | mask : accum
           end
-          extras_section_data('GEXT', masks.pack('C*'))
         end
+        masks.pack('C*')
+      end
+
+      def ltim_section_needed?
+        timer_at || timer_running?
       end
       def ltim_section_data
-        if timer_at || timer_running?
-          extras_section_data('LTIM', [timer_at.to_i, timer_running? ? '0' : '1'].join(','))
-        end
+        [timer_at.to_i, timer_running? ? '0' : '1'].join(',')
       end
 
-      def grbs_and_rtbl_section_data
-        if cells.any?(&:rebus?)
+      def grbs_section_needed?
+        cells.any?(&:rebus?)
+      end
+      def grbs_section_data
+        set_grbs_and_rtbl_section_data
+        @grbs_body
+      end
+
+      alias_method :rtbl_section_needed?, :grbs_section_needed?
+      def rtbl_section_data
+        set_grbs_and_rtbl_section_data
+        @rtbl_body
+      end
+
+      # These sections need to be created together, this is how we prevent doing it twice while
+      # maintaining the #{section_name}_section_data method naming scheme
+      def set_grbs_and_rtbl_section_data
+        unless @grbs_body
           rebus_strings = cells.select(&:rebus?).map(&:solution)
           # Preserve the original numbering, but also allow for new rebuses
           old_numbers = (@original_rebuses_by_number || {}).invert
@@ -264,13 +296,12 @@ module Crossyglot
             accum
           end
 
-          grbs_body = cells.map {|c| c.rebus? ? rebuses[c.solution] + 1 : 0}.pack('C*')
-          rtbl_body = rebuses.sort_by{|v, n| n}.map{|v, n| '%2d:%s' % [n, v]}.join(';') + ';'
-
-          extras_section_data('GRBS', grbs_body) + extras_section_data('RTBL', rtbl_body)
+          @grbs_body = cells.map {|c| c.rebus? ? rebuses[c.solution] + 1 : 0}.pack('C*')
+          @rtbl_body = rebuses.sort_by{|v, n| n}.map{|v, n| '%2d:%s' % [n, v]}.join(';') + ';'
         end
       end
 
+      # Put the title, body and size into the correct format
       def extras_section_data(title, body)
         [title, body.size, checksum(body)].pack(EXTRA_HEADER_FORMAT) + body + ?\0
       end

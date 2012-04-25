@@ -320,7 +320,7 @@ describe Formats::Puz do
     # Testing via round tripping seems like the easiest and most complete way to exercise all the
     # writing logic.
     describe 'should correctly roundtrip' do
-      %w{vanilla partially-filled rebus unchecked circles}.each do |fn|
+      %w{vanilla partially-filled rebus unchecked circles other-extras-order}.each do |fn|
         it "#{fn}.puz" do
           should_roundtrip_puz_file testfile_path("#{fn}.puz")
         end
@@ -354,6 +354,11 @@ describe Formats::Puz do
   describe '#extras_data' do
     it 'should be empty by default' do
       puz.send(:extras_data).should == ''
+    end
+    it 'should include sections in @original_extras_order' do
+      puz.instance_eval {@original_extras_order = %w(GEXT LTIM)}
+      puz.send(:extras_data).should match(/GEXT/)
+      puz.send(:extras_data).should match(/LTIM/)
     end
     describe 'should include GEXT if' do
       [:is_incorrect, :was_previously_incorrect, :was_revealed].each do |attr|
