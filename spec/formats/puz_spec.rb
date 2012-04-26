@@ -123,6 +123,7 @@ describe Formats::Puz do
       @rebus_puzzle = Formats::Puz.new.parse(testfile_path('rebus.puz'))
       @unchecked_puzzle = Formats::Puz.new.parse(testfile_path('unchecked.puz'))
       @circles_puzzle = Formats::Puz.new.parse(testfile_path('circles.puz'))
+      @user_rebus_puzzle = Formats::Puz.new.parse(testfile_path('user-rebus.puz'))
     end
 
     it 'should accept a path' do
@@ -299,7 +300,14 @@ describe Formats::Puz do
       end
     end
     describe 'for a puzzle with user entered rebus cells' do
-      it 'should set the user entries to the fill of the relevant cells'
+      it 'should set the user entries to the fill of the relevant cells' do
+        @user_rebus_puzzle.cell_at(4, 3).fill.should == 'HELLO'
+        @user_rebus_puzzle.cell_at(5, 4).fill.should == 'THERE'
+      end
+
+      it 'should not set anything to other cells' do
+        @user_rebus_puzzle.cell_at(0, 0).fill.should be_nil
+      end
     end
   end
 
@@ -320,7 +328,8 @@ describe Formats::Puz do
     # Testing via round tripping seems like the easiest and most complete way to exercise all the
     # writing logic.
     describe 'should correctly roundtrip' do
-      %w{vanilla partially-filled rebus unchecked circles other-extras-order}.each do |fn|
+      %w{vanilla partially-filled rebus unchecked circles other-extras-order
+         user-rebus}.each do |fn|
         it "#{fn}.puz" do
           should_roundtrip_puz_file testfile_path("#{fn}.puz")
         end
@@ -348,6 +357,10 @@ describe Formats::Puz do
       puz.cells << Cell.new('D')
 
       puz.send(:fill_data).should == '--C.-'
+    end
+    it 'should just return first letter if the user has entered a rebus' do
+      puz.cells << Cell.new('A', fill: 'ABC')
+      puz.send(:fill_data).should == 'A'
     end
   end
 
@@ -387,6 +400,11 @@ describe Formats::Puz do
       puz.cells << Cell.new('ABC')
       puz.send(:extras_data).should match(/GRBS/)
       puz.send(:extras_data).should match(/RTBL/)
+    end
+
+    it 'should include RUSR if a cell has rebus fill' do
+      puz.cells << Cell.new('A', fill: 'ABC')
+      puz.send(:extras_data).should match(/RUSR/)
     end
   end
 

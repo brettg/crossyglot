@@ -25,15 +25,15 @@ module Crossyglot
       # Range of header parts used in header checksum
       HEADER_CKSUM_RANGE = -5..-1
 
+      EXTRA_SECTIONS = %w{GEXT LTIM GRBS RTBL RUSR}
       EXTRA_HEADER_FORMAT = 'a4vv'
       EXTRA_HEADER_LENGTH = 8
-
-      EXTRA_SECTIONS = %w{GEXT LTIM GRBS RTBL}
 
       # Map of attributes on Cell to mask bit to check against value for cell in GEXT extra section
       GEXT_MASKS = {is_incorrect: 0x20, was_previously_incorrect: 0x10,
                     was_revealed: 0x40, is_circled: 0x80}
 
+      # FIXME - clean up the Rdociness of this (don't want this in rdoc, do want proxied methods in)
       # defer given methods to the headers hash
       def self.proxy_to_headers(*meth_names)
         meth_names.each do |meth_name|
@@ -192,6 +192,12 @@ module Crossyglot
         end
       end
 
+      def parse_rusr_section(section_body)
+        section_body.split(?\0).each_with_index do |reb, idx|
+          cells[idx].fill = reb  if reb && reb.size > 0
+        end
+      end
+
       # Next \0 delimited string from file, nil if of empty length
       def next_string(puzfile)
         s = puzfile.gets(?\0).chomp(?\0)
@@ -233,7 +239,7 @@ module Crossyglot
       end
 
       def fill_data
-        cells.map {|c| c.fill || (c.black? ? ?. : ?-)}.join
+        cells.map {|c| c.black? ? ?. : (c.fill && c.fill[0] || ?-)}.join
       end
 
       def extras_data
@@ -281,6 +287,13 @@ module Crossyglot
       def rtbl_section_data
         set_grbs_and_rtbl_section_data
         @rtbl_body
+      end
+
+      def rusr_section_needed?
+        cells.any?(&:rebus_fill?)
+      end
+      def rusr_section_data
+        cells.map {|c| c.rebus_fill? ? c.fill : nil}.join(?\0) << ?\0
       end
 
       # These sections need to be created together, this is how we prevent doing it twice while
