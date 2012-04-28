@@ -146,79 +146,91 @@ describe Formats::Puz do
       end
     end
 
-    describe 'for a fairly vanilla .puz' do
-      it 'should be a Formats::Puz' do
-        @vanilla_puzzle.should be_kind_of(Formats::Puz)
+    it 'should be a Formats::Puz' do
+      @vanilla_puzzle.should be_kind_of(Formats::Puz)
+    end
+
+    describe 'setting #headers' do
+      it 'should set it to the same length as HEADER_PARTS' do
+        @vanilla_puzzle.headers.size.should == Formats::Puz::HEADER_PARTS.size
       end
 
-      describe 'setting #headers' do
-        it 'should set it to the same length as HEADER_PARTS' do
-          @vanilla_puzzle.headers.size.should == Formats::Puz::HEADER_PARTS.size
-        end
-
-        {puzzle_cksum: 41078,
-         magic: Formats::Puz::MAGIC,
-         header_cksum: 55810,
-         icheated_cksum: "\x4B\xED\x16\x69\x9B\x07\x37\xEE",
-         version: '1.2c',
-         unknown1: 0,
-         scrambled_cksum: 0,
-         unknown2: "\0\0\0\0\x35\x04\x91\x7C\x3E\x04\x91\x7C",
-         width: 15,
-         height: 15,
-         clue_count: 76,
-         puzzle_type: 1,
-         solution_state: 0}.each do |header, val|
-          it "should set :#{header}" do
-            @vanilla_puzzle.headers[header].should == val
-          end
+      {puzzle_cksum: 41078,
+        magic: Formats::Puz::MAGIC,
+        header_cksum: 55810,
+        icheated_cksum: "\x4B\xED\x16\x69\x9B\x07\x37\xEE",
+        version: '1.2c',
+        unknown1: 0,
+        scrambled_cksum: 0,
+        unknown2: "\0\0\0\0\x35\x04\x91\x7C\x3E\x04\x91\x7C",
+        width: 15,
+        height: 15,
+        clue_count: 76,
+        puzzle_type: 1,
+        solution_state: 0}.each do |header, val|
+        it "should set :#{header}" do
+          @vanilla_puzzle.headers[header].should == val
         end
       end
+    end
 
-      it 'should set #version' do
-        @vanilla_puzzle.version.should == '1.2c'
+    it 'should set #version' do
+      @vanilla_puzzle.version.should == '1.2c'
+    end
+    it 'should set #width' do
+      @vanilla_puzzle.width.should == 15
+    end
+    it 'should set #height' do
+      @vanilla_puzzle.height.should == 15
+    end
+
+    it 'should set #title' do
+      @vanilla_puzzle.title.should == 'LA Times, Mon, Mar 26, 2012'
+    end
+    it 'should set #author' do
+      @vanilla_puzzle.author.should == 'Ki Lee / Ed. Rich Norris'
+    end
+    it 'should set #copyright' do
+      expected = "\xA9 2012 Tribune Media Services, Inc.".force_encoding('ISO-8859-1')
+      @vanilla_puzzle.copyright.should == expected
+    end
+    it 'should set #clues' do
+      @vanilla_puzzle.clues.should_not be_empty
+      @vanilla_puzzle.clues.size.should == 76
+      @vanilla_puzzle.clues.first.should == 'Filled tortilla'
+      @vanilla_puzzle.clues.last.should == 'Quiz, e.g.'
+    end
+    it 'should set #notes' do
+      @vanilla_puzzle.notes.should be_nil
+    end
+    it 'should set #cells' do
+      @vanilla_puzzle.cells.should_not be_nil
+      @vanilla_puzzle.cells.size.should == 225
+
+      {0 => [?T, false, true, true, 1], 1 => [?A, false, false, true, 2],
+        4 => [nil, true, false, false, nil], 15 => [?A, false, true, false, 14],
+        16 => [?S, false, false, false, nil], -1 => [?T, false, false, false, nil]
+      }.each do |idx, cell_props|
+        sol, blk, acr, dwn, num = cell_props
+        cell = @vanilla_puzzle.cells[idx]
+        cell.solution.should == sol
+        cell.black?.should == blk
+        cell.across?.should == acr
+        cell.down?.should == dwn
+        cell.number.should == num
       end
-      it 'should set #width' do
-        @vanilla_puzzle.width.should == 15
-      end
-      it 'should set #height' do
-        @vanilla_puzzle.height.should == 15
+    end
+
+    it 'should set the encoding off all the strings to ISO-8859-1' do
+      iso88591 = Encoding.find('ISO-8859-1')
+      %w{title author copyright}.each do |attr|
+        @vanilla_puzzle.send(attr).encoding.should == iso88591
       end
 
-      it 'should set #title' do
-        @vanilla_puzzle.title.should == 'LA Times, Mon, Mar 26, 2012'
-      end
-      it 'should set #author' do
-        @vanilla_puzzle.author.should == 'Ki Lee / Ed. Rich Norris'
-      end
-      it 'should set #copyright' do
-        @vanilla_puzzle.copyright.should == "\xA9 2012 Tribune Media Services, Inc."
-      end
-      it 'should set #clues' do
-        @vanilla_puzzle.clues.should_not be_empty
-        @vanilla_puzzle.clues.size.should == 76
-        @vanilla_puzzle.clues.first.should == 'Filled tortilla'
-        @vanilla_puzzle.clues.last.should == 'Quiz, e.g.'
-      end
-      it 'should set #notes' do
-        @vanilla_puzzle.notes.should be_nil
-      end
-      it 'should set #cells' do
-        @vanilla_puzzle.cells.should_not be_nil
-        @vanilla_puzzle.cells.size.should == 225
+      @unchecked_puzzle.notes.encoding.should == iso88591
 
-        {0 => [?T, false, true, true, 1], 1 => [?A, false, false, true, 2],
-         4 => [nil, true, false, false, nil], 15 => [?A, false, true, false, 14],
-         16 => [?S, false, false, false, nil], -1 => [?T, false, false, false, nil]
-        }.each do |idx, cell_props|
-          sol, blk, acr, dwn, num = cell_props
-          cell = @vanilla_puzzle.cells[idx]
-          cell.solution.should == sol
-          cell.black?.should == blk
-          cell.across?.should == acr
-          cell.down?.should == dwn
-          cell.number.should == num
-        end
+      @vanilla_puzzle.clues.each do |clue|
+        clue.encoding.should == iso88591
       end
     end
 
@@ -270,12 +282,6 @@ describe Formats::Puz do
         end
       end
     end
-    describe 'for a puzzle with a scambled solution' do
-      it 'should be #scrambled?'
-    end
-    describe 'for a diagramless puzzle' do
-      it 'should be #diagramless?'
-    end
     describe 'for a puzzled with unchecked cells' do
       it 'should not give numbers to cells that start words of fewer than 3 letters' do
         c = @unchecked_puzzle.cell_at(6, 5)
@@ -308,6 +314,12 @@ describe Formats::Puz do
       it 'should not set anything to other cells' do
         @user_rebus_puzzle.cell_at(0, 0).fill.should be_nil
       end
+    end
+    describe 'for a puzzle with a scambled solution' do
+      it 'should be #scrambled?'
+    end
+    describe 'for a diagramless puzzle' do
+      it 'should be #diagramless?'
     end
   end
 
@@ -361,6 +373,14 @@ describe Formats::Puz do
     it 'should just return first letter if the user has entered a rebus' do
       puz.cells << Cell.new('A', fill: 'ABC')
       puz.send(:fill_data).should == 'A'
+    end
+  end
+
+  describe '#strings_data' do
+    it 'should write strings in ISO-8859-1' do
+      # copyright character is different between latin1 and UTF-8
+      puz.clues << "\xA9".force_encoding('ISO-8859-1').encode('UTF-8')
+      puz.send(:strings_data).bytes.to_a.should == [0, 0, 0, 0xA9, 0, 0]
     end
   end
 

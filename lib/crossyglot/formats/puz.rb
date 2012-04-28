@@ -25,6 +25,8 @@ module Crossyglot
       # Range of header parts used in header checksum
       HEADER_CKSUM_RANGE = -5..-1
 
+      STRINGS_SECTION_ENCODING = 'ISO-8859-1'
+
       EXTRA_SECTIONS = %w{GEXT LTIM GRBS RTBL RUSR}
       EXTRA_HEADER_FORMAT = 'a4vv'
       EXTRA_HEADER_LENGTH = 8
@@ -201,7 +203,7 @@ module Crossyglot
       # Next \0 delimited string from file, nil if of empty length
       def next_string(puzfile)
         s = puzfile.gets(?\0).chomp(?\0)
-        s.empty? ? nil : s
+        s.empty? ? nil : s.force_encoding(STRINGS_SECTION_ENCODING)
       end
 
       #---------------------------------------
@@ -218,10 +220,7 @@ module Crossyglot
         io.write(header_data)
         io.write(solution_data)
         io.write(fill_data)
-        io.write([title, author, copyright].join(?\0) + ?\0)
-        io.write(clues.join(?\0) + ?\0)
-        io.write(notes)
-        io.write(?\0)
+        io.write(strings_data)
         io.write(extras_data)
       end
 
@@ -240,6 +239,12 @@ module Crossyglot
 
       def fill_data
         cells.map {|c| c.black? ? ?. : (c.fill && c.fill[0] || ?-)}.join
+      end
+
+      def strings_data
+        all_strings = [title, author, copyright].concat(clues).concat([notes, nil])
+        all_strings.map! {|s| s && s.encode(STRINGS_SECTION_ENCODING)}
+        all_strings.join(?\0)
       end
 
       def extras_data
