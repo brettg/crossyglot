@@ -192,7 +192,7 @@ describe Formats::Puz do
     end
     it 'should set #copyright' do
       expected = "\xA9 2012 Tribune Media Services, Inc.".force_encoding('ISO-8859-1')
-      @vanilla_puzzle.copyright.should == expected
+      @vanilla_puzzle.copyright.should == expected.encode('UTF-8')
     end
     it 'should set #clues' do
       @vanilla_puzzle.clues.should_not be_empty
@@ -221,16 +221,16 @@ describe Formats::Puz do
       end
     end
 
-    it 'should set the encoding off all the strings to ISO-8859-1' do
-      iso88591 = Encoding.find('ISO-8859-1')
+    it 'should set the encoding off all the strings to UTF-8' do
+      utf8 = Encoding.find('UTF-8')
       %w{title author copyright}.each do |attr|
-        @vanilla_puzzle.send(attr).encoding.should == iso88591
+        @vanilla_puzzle.send(attr).encoding.should == utf8
       end
 
-      @unchecked_puzzle.notes.encoding.should == iso88591
+      @unchecked_puzzle.notes.encoding.should == utf8
 
       @vanilla_puzzle.clues.each do |clue|
-        clue.encoding.should == iso88591
+        clue.encoding.should == utf8
       end
     end
 
@@ -336,17 +336,6 @@ describe Formats::Puz do
         File.exists?(tmp_path).should be_true
       end
     end
-
-    # Testing via round tripping seems like the easiest and most complete way to exercise all the
-    # writing logic.
-    describe 'should correctly roundtrip' do
-      %w{vanilla partially-filled rebus unchecked circles other-extras-order
-         user-rebus}.each do |fn|
-        it "#{fn}.puz" do
-          should_roundtrip_puz_file testfile_path("#{fn}.puz")
-        end
-      end
-    end
   end
 
   describe '#solution_data' do
@@ -378,7 +367,7 @@ describe Formats::Puz do
 
   describe '#strings_data' do
     it 'should write strings in ISO-8859-1' do
-      # copyright character is different between latin1 and UTF-8
+      # copyright character is different betwee latin1 and UTF-8
       puz.clues << "\xA9".force_encoding('ISO-8859-1').encode('UTF-8')
       puz.send(:strings_data).bytes.to_a.should == [0, 0, 0, 0xA9, 0, 0]
     end
@@ -431,6 +420,17 @@ describe Formats::Puz do
   describe '#extras_section_data' do
     it 'should return extras section with header and body' do
       puz.send(:extras_section_data, 'LTIM', '180,0').should == "LTIM\x05\x00\\\x10180,0\x00"
+    end
+  end
+
+  # Testing via round tripping seems like the easiest and most complete way to exercise all the
+  # writing logic.
+  describe 'should correctly roundtrip' do
+    %w{vanilla partially-filled rebus unchecked circles other-extras-order
+        user-rebus}.each do |fn|
+      it "#{fn}.puz" do
+        should_roundtrip_puz_file testfile_path("#{fn}.puz")
+      end
     end
   end
 end

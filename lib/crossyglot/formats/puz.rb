@@ -91,10 +91,7 @@ module Crossyglot
 
         parse_solution(puzfile)
 
-        parse_string_sections(puzfile)
-        parse_clues(puzfile)
-
-        self.notes = next_string(puzfile)
+        parse_strings_sections(puzfile)
 
         parse_extras(puzfile)
       end
@@ -132,10 +129,12 @@ module Crossyglot
         renumber_cells!
       end
 
-      def parse_string_sections(puzfile)
+      def parse_strings_sections(puzfile)
         self.title = next_string(puzfile)
         self.author = next_string(puzfile)
         self.copyright = next_string(puzfile)
+        parse_clues(puzfile)
+        self.notes = next_string(puzfile)
       end
 
       def parse_clues(puzfile)
@@ -203,7 +202,22 @@ module Crossyglot
       # Next \0 delimited string from file, nil if of empty length
       def next_string(puzfile)
         s = puzfile.gets(?\0).chomp(?\0)
-        s.empty? ? nil : s.force_encoding(STRINGS_SECTION_ENCODING)
+        s.empty? ? nil : s.force_encoding(STRINGS_SECTION_ENCODING).encode('UTF-8')
+      end
+
+      #---------------------------------------
+      #   Strings methods encoded for writing
+      #---------------------------------------
+      %w{title author copyright notes}.each do |attr|
+        define_method("encoded_#{attr}") do
+          encode_string_data send(attr)
+        end
+      end
+      def encoded_clues
+        clues.map {|c| encode_string_data(c)}
+      end
+      def encode_string_data(s)
+        s && s.encode(STRINGS_SECTION_ENCODING)
       end
 
       #---------------------------------------
@@ -242,10 +256,11 @@ module Crossyglot
       end
 
       def strings_data
-        all_strings = [title, author, copyright].concat(clues).concat([notes, nil])
-        all_strings.map! {|s| s && s.encode(STRINGS_SECTION_ENCODING)}
+        all_strings = [encoded_title, encoded_author, encoded_copyright]
+        all_strings.concat(encoded_clues).concat([notes, nil])
         all_strings.join(?\0)
       end
+
 
       def extras_data
         @grbs_body = @rbtl_body = nil
@@ -348,14 +363,14 @@ module Crossyglot
       end
 
       def puzzle_cksum
-        data = [solution_data, fill_data, strings_section_for_cksum, clues.join,
+        data = [solution_data, fill_data, strings_section_for_cksum, encoded_clues.join,
                 notes_for_cksum].join
         checksum data, header_cksum
       end
 
       def icheated_cksum
         cksums = [header_cksum, checksum(solution_data), checksum(fill_data),
-                  checksum([strings_section_for_cksum, clues.join, notes_for_cksum].join)]
+                  checksum([strings_section_for_cksum, encoded_clues.join, notes_for_cksum].join)]
         lows, highs = [], []
         cksums.each_with_index do |cksum, idx|
           lows << (ICHEATED_MASK[idx] ^ (cksum & 0xFF))
@@ -366,13 +381,15 @@ module Crossyglot
 
       # title author and copyright followed by \0 if they are not empty
       def strings_section_for_cksum
-        [title, author, copyright].reject{|s| !s || s.empty?}.map {|s| s + ?\0}.join
+        strings = [encoded_title, encoded_author, encoded_copyright]
+        strings.reject{|s| !s || s.empty?}.map {|s| s + ?\0}.join
       end
       # notes + \0 if notes is not empty and version == 1.3
+      # TODO - is this really >= 1.3???
       def notes_for_cksum
         if version && version.to_s == '1.3'
           if notes && !notes.empty?
-            notes + ?\0
+            encoded_notes + ?\0
           end
         end
       end
