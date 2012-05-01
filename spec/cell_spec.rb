@@ -36,11 +36,11 @@ describe Cell do
     end
   end
 
-  {is_incorrect: :incorrect?, is_black: :black?, is_circled: :circled?,
+  {is_incorrect: :incorrect?, is_black: :black?, is_circled: :circled?, number: :numbered?,
    was_previously_incorrect: :previously_incorrect?, was_revealed: :revealed?
   }.each do |attr, predicate|
     describe "##{predicate}" do
-      it "should be true when @#{attr} is true" do
+      it "should be true when @#{attr} is truthy" do
         set_method = "#{attr}="
 
         cell.send(predicate).should == false

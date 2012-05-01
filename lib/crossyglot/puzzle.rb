@@ -1,3 +1,5 @@
+# TODO - Store clues as attributes in cells in the cell array instead of in their own array to be
+#        more general instead of mimicking .puz files
 module Crossyglot
   # The puzzle object
   class Puzzle
@@ -32,14 +34,14 @@ module Crossyglot
       end
     end
 
+    # TODO - these two could be more efficient.
     # All the across clues in a(n ordered) hash keyed by number
     def acrosses
-      collect_clues_by_number(:across?)
+      acrosses_and_downs.first
     end
     # All the down clues in a(n ordered) hash keyed by number
     def downs
-      # not super efficient, having walk cells twice, but we'll punt until it becomes an issue
-      collect_clues_by_number(:down?, (acrosses || []).size)
+      acrosses_and_downs.last
     end
 
     # (Re)assigns number, is_down and is_across to each non black cell based on their position in
@@ -71,19 +73,15 @@ module Crossyglot
 
     private
 
-    # create the has for acrosses or downs
-    # cell_flag_method is one of :down? or :across?
-    # clue index is the first clue to start with in the clues array
-    def collect_clues_by_number(cell_flag_method, clue_index=0)
-      unless cells.empty? || clues.empty?
-        cells.inject({}) do |accum, cell|
-          if cell.send cell_flag_method
-            accum[cell.number] = clues[clue_index]
-            clue_index += 1
-          end
-          accum
-        end.freeze
-      end
+    def acrosses_and_downs
+      cs = clues.dup
+      cells.inject([{}, {}]) do |accum, cell|
+        if cell.numbered?
+          accum.first[cell.number] = cs.shift  if cell.across?
+          accum.last[cell.number] = cs.shift  if cell.down?
+        end
+        accum
+      end.map(&:freeze)
     end
   end
 end

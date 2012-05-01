@@ -85,7 +85,7 @@ describe Puzzle do
     end
   end
 
-  describe '#accross and #down' do
+  describe '#acrosses_and_downs #accross and #down' do
     #
     # Making grid like this ("-" is black):
     # 1 2 - 3
@@ -94,7 +94,7 @@ describe Puzzle do
     #
     before do
       @puzzle = Puzzle.new
-      @puzzle.clues.concat %w{1across 3across 4across 6across 7across 1down 2down 3down 5down}
+      @puzzle.clues.concat %w{1across 1down 2down 3across 3down 4across 5down 6across 7across}
       [[1, true, true], [2, false, true], false,            [3, true, true],
        [4, true],       [],               [5, false, true], [],
        [6, true],       false,            [7, true],        []].each do |cell_init|
@@ -107,21 +107,26 @@ describe Puzzle do
       end
     end
     it 'shoud return hash of clues keyed by number for #acrosses' do
-      @puzzle.acrosses.should == {1 => '1across', 3 => '3across', 4 => '4across', 6 => '6across',
-                                  7 => '7across'}
+      exp = {1 => '1across', 3 => '3across', 4 => '4across', 6 => '6across', 7 => '7across'}
+      @puzzle.acrosses.should == exp
     end
     it 'shoud return hash of clues keyed by number for #downs' do
-      @puzzle.downs.should == {1 => '1down', 2 => '2down', 3 => '3down', 5 => '5down'}
+      exp = {1 => '1down', 2 => '2down', 3 => '3down', 5 => '5down'}
+      @puzzle.downs.should == exp
     end
     it 'should freeze both hashes' do
       @puzzle.acrosses.should be_frozen
       @puzzle.downs.should be_frozen
     end
+    it 'should not try to change clues' do
+      @puzzle.clues.freeze
+      lambda {@puzzle.acrosses}.should_not raise_error
+    end
 
-    it 'should both be nil for a puzzle that has no clues or cells' do
+    it 'should both be empty for a puzzle that has no clues or cells' do
       p = Puzzle.new
-      p.acrosses.should be_nil
-      p.downs.should be_nil
+      p.acrosses.should == {}
+      p.downs.should == {}
     end
   end
 

@@ -20,9 +20,10 @@ module Crossyglot
       end
     end
 
-    def circled?; !!@is_circled end
     def black?; !!@is_black end
+    def circled?; !!@is_circled end
     def incorrect?; !!@is_incorrect end
+    def numbered?; !!@number end
     def previously_incorrect?; !!@was_previously_incorrect end
     def revealed?; !!@was_revealed end
 
