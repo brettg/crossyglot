@@ -28,11 +28,13 @@ describe Puzzle do
     end
   end
 
-  describe '#timer_running?' do
-    it 'should be true if is_timer_running is set to true' do
-      puzzle.should_not be_timer_running
-      puzzle.is_timer_running = true
-      puzzle.should be_timer_running
+  {is_timer_running: :timer_running?, is_diagramless: :diagramless?}.each do |attr, pred|
+    describe pred do
+      it "should be true if #{attr} is set to true" do
+        puzzle.send(pred).should == false
+        puzzle.send("#{attr}=", true)
+        puzzle.send(pred).should == true
+      end
     end
   end
 

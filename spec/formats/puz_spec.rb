@@ -23,6 +23,22 @@ describe Formats::Puz do
     end
   end
 
+  describe '#is_diagramless' do
+    it 'should read value from headers' do
+      puz.is_diagramless.should == false
+      puz.headers[:puzzle_type] = Formats::Puz::DIAGRAMLESS_PUZZLE_TYPE
+      puz.is_diagramless.should == true
+      puz.headers[:puzzle_type] = 0
+      puz.is_diagramless.should == false
+    end
+    it 'should set value to headers' do
+      puz.is_diagramless = true
+      puz.headers[:puzzle_type].should == Formats::Puz::DIAGRAMLESS_PUZZLE_TYPE
+      puz.is_diagramless = false
+      puz.headers[:puzzle_type].should == Formats::Puz::NORMAL_PUZZLE_TYPE
+    end
+  end
+
   describe '#checksum' do
     it 'should return given checksum when data is empty' do
       puz.send(:checksum, nil).should == 0
@@ -124,6 +140,7 @@ describe Formats::Puz do
       @unchecked_puzzle = Formats::Puz.new.parse(testfile_path('unchecked.puz'))
       @circles_puzzle = Formats::Puz.new.parse(testfile_path('circles.puz'))
       @user_rebus_puzzle = Formats::Puz.new.parse(testfile_path('user-rebus.puz'))
+      @diagramless = Formats::Puz.new.parse(testfile_path('diagramless.puz'))
     end
 
     it 'should accept a path' do
@@ -234,6 +251,12 @@ describe Formats::Puz do
       end
     end
 
+    describe 'for a "normal" puzzle' do
+      it 'should not be diagramless' do
+        @vanilla_puzzle.should_not be_diagramless
+      end
+    end
+
     describe 'for a puzzle with the letters filled in' do
       it 'should set solution values to relevant cells' do
         {[0, 0] => ?A, [1, 0] => ?F, [2, 0] => ?T, [3, 0] => ?E, [4, 0] => ?R, [9, 0] => ?E,
@@ -319,7 +342,12 @@ describe Formats::Puz do
       it 'should be #scrambled?'
     end
     describe 'for a diagramless puzzle' do
-      it 'should be #diagramless?'
+      it 'should be #diagramless?' do
+        @diagramless.should be_diagramless
+      end
+      it 'should stil set cells without solution to black' do
+        @diagramless.cells.first.should be_black
+      end
     end
   end
 
@@ -348,6 +376,12 @@ describe Formats::Puz do
 
       puz.send(:solution_data).should == 'ABC.D'
     end
+
+    it 'should use colons for black squares if the puzzle is diagramless' do
+      puz.is_diagramless = true
+      puz.cells << Cell.black
+      puz.send(:solution_data).should == ':'
+    end
   end
 
   describe '#fill_data' do
@@ -362,6 +396,11 @@ describe Formats::Puz do
     it 'should just return first letter if the user has entered a rebus' do
       puz.cells << Cell.new('A', fill: 'ABC')
       puz.send(:fill_data).should == 'A'
+    end
+    it 'should use colons for black squares if the puzzle is diagramless' do
+      puz.is_diagramless = true
+      puz.cells << Cell.black
+      puz.send(:fill_data).should == ':'
     end
   end
 
@@ -427,7 +466,7 @@ describe Formats::Puz do
   # writing logic.
   describe 'should correctly roundtrip' do
     %w{vanilla partially-filled rebus unchecked circles other-extras-order
-        user-rebus}.each do |fn|
+        user-rebus diagramless}.each do |fn|
       it "#{fn}.puz" do
         should_roundtrip_puz_file testfile_path("#{fn}.puz")
       end

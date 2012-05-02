@@ -20,10 +20,15 @@ module Crossyglot
                       clue_count: 'v',
                       puzzle_type: 'v',
                       solution_state: 'v'}
-      HEADER_DEFAULTS = {magic: MAGIC, version: '1.3', puzzle_type: 1}
       HEADER_FORMAT = HEADER_PARTS.values.join
       # Range of header parts used in header checksum
       HEADER_CKSUM_RANGE = -5..-1
+
+      NORMAL_PUZZLE_TYPE = 1
+      DIAGRAMLESS_PUZZLE_TYPE = 0x0401
+
+      HEADER_DEFAULTS = {magic: MAGIC, version: '1.3', puzzle_type: 1}
+
 
       STRINGS_SECTION_ENCODING = 'ISO-8859-1'
 
@@ -54,6 +59,14 @@ module Crossyglot
 
       def headers
         @headers ||= HEADER_DEFAULTS.clone
+      end
+
+      # Override to read and write directly to headers
+      def is_diagramless
+        headers[:puzzle_type] == DIAGRAMLESS_PUZZLE_TYPE
+      end
+      def is_diagramless=(diagramless)
+        headers[:puzzle_type] = diagramless ? DIAGRAMLESS_PUZZLE_TYPE : NORMAL_PUZZLE_TYPE
       end
 
       def parse(path_or_io)
@@ -109,6 +122,8 @@ module Crossyglot
         HEADER_PARTS.keys.each_with_index do |name, idx|
           self.headers[name] = header_values[idx]
         end
+
+        self.is_diagramless
       end
 
       def parse_solution(puzfile)
@@ -119,7 +134,7 @@ module Crossyglot
 
         # Extra to_a prevents a segfault on ruby 1.9.2 (fixed in 1.9.3)
         solution.each_char.zip(fill.each_char.to_a) do |sol, fill|
-          cells << if ?. == sol
+          cells << if ?. == sol ||  ?: == sol
             Cell.black
           else
             Cell.new(sol, fill: fill == ?- ? nil : fill)
@@ -248,11 +263,15 @@ module Crossyglot
       end
 
       def solution_data
-        cells.map {|c| c.black? ? ?. : c.solution[0]}.join
+        cells.map {|c| c.black? ? black_cell_char : c.solution[0]}.join
       end
 
       def fill_data
-        cells.map {|c| c.black? ? ?. : (c.fill && c.fill[0] || ?-)}.join
+        cells.map {|c| c.black? ? black_cell_char : (c.fill && c.fill[0] || ?-)}.join
+      end
+
+      def black_cell_char
+        diagramless? ? ?: : ?.
       end
 
       def strings_data

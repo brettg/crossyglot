@@ -6,12 +6,14 @@ module Crossyglot
     attr_accessor :author, :copyright, :notes, :title
     attr_accessor :height, :width
     attr_accessor :timer_at, :is_timer_running
+    attr_accessor :is_diagramless
 
     def self.parse(path)
       Formats::Puz.new.parse(path)
     end
 
-    def timer_running?; !!@is_timer_running end
+    def timer_running?; !!is_timer_running end
+    def diagramless?; !!is_diagramless end
 
     def cells
       @cells ||= []
