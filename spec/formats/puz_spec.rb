@@ -26,16 +26,40 @@ describe Formats::Puz do
   describe '#is_diagramless' do
     it 'should read value from headers' do
       puz.is_diagramless.should == false
-      puz.headers[:puzzle_type] = Formats::Puz::DIAGRAMLESS_PUZZLE_TYPE
+      puz.headers[:puzzle_type] = Formats::Puz::PUZZLE_TYPES[:diagramless]
       puz.is_diagramless.should == true
       puz.headers[:puzzle_type] = 0
       puz.is_diagramless.should == false
     end
     it 'should set value to headers' do
       puz.is_diagramless = true
-      puz.headers[:puzzle_type].should == Formats::Puz::DIAGRAMLESS_PUZZLE_TYPE
+      puz.headers[:puzzle_type].should == Formats::Puz::PUZZLE_TYPES[:diagramless]
       puz.is_diagramless = false
-      puz.headers[:puzzle_type].should == Formats::Puz::NORMAL_PUZZLE_TYPE
+      puz.headers[:puzzle_type].should == Formats::Puz::PUZZLE_TYPES[:normal]
+    end
+  end
+
+  describe '#is_scrambled' do
+    it 'should read value from headers' do
+      puz.is_diagramless.should == false
+      puz.headers[:solution_state] = Formats::Puz::SOLUTION_STATES[:scrambled]
+      puz.is_scrambled.should == true
+      puz.headers[:solution_state] = 334
+      puz.is_scrambled.should == false
+    end
+    it 'should set value to headers' do
+      puz.is_scrambled = true
+      puz.headers[:solution_state].should == Formats::Puz::SOLUTION_STATES[:scrambled]
+      puz.is_scrambled = false
+      puz.headers[:solution_state].should == Formats::Puz::SOLUTION_STATES[:normal]
+    end
+  end
+
+  describe '#scrambled?' do
+    it 'should return true if is_scambled is true' do
+      puz.should_not be_scrambled
+      puz.is_scrambled = true
+      puz.should be_scrambled
     end
   end
 
@@ -141,6 +165,7 @@ describe Formats::Puz do
       @circles_puzzle = Formats::Puz.new.parse(testfile_path('circles.puz'))
       @user_rebus_puzzle = Formats::Puz.new.parse(testfile_path('user-rebus.puz'))
       @diagramless = Formats::Puz.new.parse(testfile_path('diagramless.puz'))
+      @scrambled = Formats::Puz.new.parse(testfile_path('scrambled.puz'))
     end
 
     it 'should accept a path' do
@@ -255,6 +280,9 @@ describe Formats::Puz do
       it 'should not be diagramless' do
         @vanilla_puzzle.should_not be_diagramless
       end
+      it 'should not be scrambled' do
+        @vanilla_puzzle.should_not be_scrambled
+      end
     end
 
     describe 'for a puzzle with the letters filled in' do
@@ -339,7 +367,10 @@ describe Formats::Puz do
       end
     end
     describe 'for a puzzle with a scambled solution' do
-      it 'should be #scrambled?'
+      it 'should be #scrambled?' do
+        p @scrambled.headers
+        @scrambled.should be_scrambled
+      end
     end
     describe 'for a diagramless puzzle' do
       it 'should be #diagramless?' do

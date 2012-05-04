@@ -24,8 +24,8 @@ module Crossyglot
       # Range of header parts used in header checksum
       HEADER_CKSUM_RANGE = -5..-1
 
-      NORMAL_PUZZLE_TYPE = 1
-      DIAGRAMLESS_PUZZLE_TYPE = 0x0401
+      PUZZLE_TYPES = {normal: 1, diagramless: 0x0401}
+      SOLUTION_STATES = {normal: 0, scrambled: 4}
 
       HEADER_DEFAULTS = {magic: MAGIC, version: '1.3', puzzle_type: 1}
 
@@ -63,11 +63,20 @@ module Crossyglot
 
       # Override to read and write directly to headers
       def is_diagramless
-        headers[:puzzle_type] == DIAGRAMLESS_PUZZLE_TYPE
+        headers[:puzzle_type] == PUZZLE_TYPES[:diagramless]
       end
       def is_diagramless=(diagramless)
-        headers[:puzzle_type] = diagramless ? DIAGRAMLESS_PUZZLE_TYPE : NORMAL_PUZZLE_TYPE
+        headers[:puzzle_type] = PUZZLE_TYPES[diagramless ? :diagramless : :normal]
       end
+
+      def is_scrambled
+        headers[:solution_state] == SOLUTION_STATES[:scrambled]
+      end
+      def is_scrambled=(scrambled)
+        headers[:solution_state] = SOLUTION_STATES[scrambled ? :scrambled : :normal]
+      end
+
+      def scrambled?; !!is_scrambled end
 
       def parse(path_or_io)
         if path_or_io.is_a?(String)
