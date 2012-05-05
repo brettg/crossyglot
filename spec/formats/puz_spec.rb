@@ -368,7 +368,6 @@ describe Formats::Puz do
     end
     describe 'for a puzzle with a scambled solution' do
       it 'should be #scrambled?' do
-        p @scrambled.headers
         @scrambled.should be_scrambled
       end
     end
@@ -378,6 +377,34 @@ describe Formats::Puz do
       end
       it 'should stil set cells without solution to black' do
         @diagramless.cells.first.should be_black
+      end
+    end
+
+
+    describe 'for files with bad checksums' do
+      it 'should parse normally if without strict argument' do
+        lambda do
+          puzzle = Formats::Puz.new.parse(testfile_path('invalid-cksum/bad-header-cksum.puz'))
+          puzzle.title.should ==  'LA Times, Mon, Mar 26, 2012'
+        end.should_not raise_error
+      end
+
+      it 'should parse file normally if strict is set to false' do
+        lambda do
+          puzzle = Formats::Puz.new.parse(testfile_path('invalid-cksum/bad-header-cksum.puz'),
+                                          false)
+          puzzle.title.should ==  'LA Times, Mon, Mar 26, 2012'
+        end.should_not raise_error
+      end
+      describe 'with string set to true' do
+        %w{header puzzle icheated}.each do |cksum|
+          it "should raise an error if the #{cksum} checksum is invalid" do
+            lambda do
+              puzzle = Formats::Puz.new.parse(testfile_path("invalid-cksum/bad-#{cksum}-cksum.puz"),
+                                              true)
+            end.should raise_error(Formats::Puz::InvalidChecksumError)
+          end
+        end
       end
     end
   end

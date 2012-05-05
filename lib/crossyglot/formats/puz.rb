@@ -2,6 +2,8 @@ module Crossyglot
   module Formats
     # The .puz file format. See http://code.google.com/p/puz/wiki/FileFormat for info
     class Puz < Puzzle
+      class InvalidChecksumError < InvalidPuzzleError; end
+
       MAGIC = "ACROSS&DOWN\0"
       ICHEATED_MASK = 'ICHEATED'.unpack('C*')
       # TOOD: Is this easy to infer somehow from HEADER_FORMAT?
@@ -78,13 +80,19 @@ module Crossyglot
 
       def scrambled?; !!is_scrambled end
 
-      def parse(path_or_io)
+      # Parse the given puzzle.
+      #
+      # @param [String, IO] path_or_io The path on disk of the puzzle or an io containing the puzzle
+      #                                data
+      # @param [Boolean] strint Whether or not to check the checksums of the puzzle while parsing
+      # @returns self
+      def parse(path_or_io, strict=false)
         if path_or_io.is_a?(String)
           File.open(path_or_io,'rb:ASCII-8BIT') do |puzfile|
-            parse_io(puzfile)
+            parse_io(puzfile, strict)
           end
         else
-          parse_io(path_or_io)
+          parse_io(path_or_io, strict)
         end
 
         self
@@ -108,7 +116,7 @@ module Crossyglot
       #   File Parsing
       #---------------------------------------
 
-      def parse_io(puzfile)
+      def parse_io(puzfile, strict)
         parse_header(puzfile)
 
         parse_solution(puzfile)
@@ -116,6 +124,8 @@ module Crossyglot
         parse_strings_sections(puzfile)
 
         parse_extras(puzfile)
+
+        validate_checksums  if strict
       end
 
       def parse_header(puzfile)
@@ -227,6 +237,15 @@ module Crossyglot
       def next_string(puzfile)
         s = puzfile.gets(?\0).chomp(?\0)
         s.empty? ? nil : s.force_encoding(STRINGS_SECTION_ENCODING).encode('UTF-8')
+      end
+
+      # Raise an error if the checksums in the headers hash do not match up
+      def validate_checksums
+        [:header_cksum, :puzzle_cksum, :icheated_cksum].each do |cksum|
+          unless send(cksum) == headers[cksum]
+            raise InvalidChecksumError.new("#{cksum.to_s.sub(/_/, ' ')} is invalid")
+          end
+        end
       end
 
       #---------------------------------------
