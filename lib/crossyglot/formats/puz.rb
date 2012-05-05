@@ -125,6 +125,9 @@ module Crossyglot
 
         parse_extras(puzfile)
 
+        @post_end ||= ''
+        @post_end << puzfile.read
+
         validate_checksums  if strict
       end
 
@@ -134,8 +137,11 @@ module Crossyglot
         # Magic wasn't found, assume file is not good
         raise InvalidPuzzleError.new('invalid .puz file')  if puzfile.eof?
 
-        # We want part of the header before the MAGIC, so go back a bit
-        puzfile.pos -= MAGIC.size + 2
+        magic_start = puzfile.pos - MAGIC.size - 2
+
+        puzfile.rewind
+
+        @pre_magic = puzfile.read(magic_start)
 
         header_values = puzfile.read(HEADER_LENGTH).unpack(HEADER_FORMAT)
         HEADER_PARTS.keys.each_with_index do |name, idx|
@@ -188,6 +194,8 @@ module Crossyglot
             # TODO - otherwise save unknown extra sections for roundtripping
 
             @original_extras_order << title
+          else
+            @post_end = header
           end
         end
       end
@@ -274,11 +282,13 @@ module Crossyglot
       end
 
       def write_to_io(io)
+        io.write(@pre_magic)
         io.write(header_data)
         io.write(solution_data)
         io.write(fill_data)
         io.write(strings_data)
         io.write(extras_data)
+        io.write(@post_end)
       end
 
       def header_data
@@ -304,7 +314,7 @@ module Crossyglot
 
       def strings_data
         all_strings = [encoded_title, encoded_author, encoded_copyright]
-        all_strings.concat(encoded_clues).concat([notes, nil])
+        all_strings.concat(encoded_clues).concat([encoded_notes, nil])
         all_strings.join(?\0)
       end
 
