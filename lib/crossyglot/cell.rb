@@ -1,6 +1,8 @@
 module Crossyglot
   # One square in the puzzle grid
   class Cell
+    NON_REBUS_CHARS = ('A'..'Z').to_a + ('a'..'z').to_a
+
     attr_accessor :number, :solution, :fill
     attr_accessor :has_across_clue, :has_down_clue, :is_incorrect, :is_black, :is_circled,
                   :was_previously_incorrect, :was_revealed
@@ -31,11 +33,17 @@ module Crossyglot
     def down?;  !!(number && @has_down_clue) end
 
     def rebus?
-      solution && solution.size > 1
+      rebus_value?(solution)
     end
     # True if the user filled in value is a rebus
     def rebus_fill?
-      fill && fill.size > 1
+      rebus_value?(fill)
+    end
+
+    private
+
+    def rebus_value?(v)
+      v && !NON_REBUS_CHARS.include?(v)
     end
   end
 end

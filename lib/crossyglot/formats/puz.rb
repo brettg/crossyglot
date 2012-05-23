@@ -1,5 +1,25 @@
 module Crossyglot
   module Formats
+    # Override the base Cell so we can save both the solution and fill values from the grid section
+    # in the .puz file and the extra rebus sections
+    class PuzCell < Cell
+      # These will be used for the grid blocks of the .puz file. Generally they should
+      # not be used externally in preference to only used #solution and #fill, which will both set
+      # their puz_grid_* compliment to nil when set themself.
+      attr_accessor :puz_grid_solution, :puz_grid_fill
+
+      # Overriden to also set #puz_grid_solution to nil when #solution is set
+      def solution=(new_solution)
+        @puz_grid_solution = nil
+        super
+      end
+      # Overridden to also set #puz_grid_fill to nil when #fill is set
+      def fill=(new_fill)
+        @puz_grid_fill = nil
+        super
+      end
+    end
+
     # The .puz file format. See http://code.google.com/p/puz/wiki/FileFormat for info
     class Puz < Puzzle
       class InvalidChecksumError < InvalidPuzzleError; end
@@ -162,7 +182,7 @@ module Crossyglot
           cells << if ?. == sol ||  ?: == sol
             Cell.black
           else
-            Cell.new(sol, fill: fill == ?- ? nil : fill)
+            PuzCell.new(sol, fill: fill == ?- ? nil : fill)
           end
         end
 
@@ -227,17 +247,25 @@ module Crossyglot
           rebus_pairs = @rtbl_section_body.split(';').map {|s| p = s.split(':'); [p[0].to_i, p[1]]}
           @original_rebuses_by_number = Hash[rebus_pairs]
 
-          @grbs_section_body.bytes.with_index do |b, idx|
+          @grbs_section_body.each_byte.zip(cells) do |b, c|
             if b > 0
-              cells[idx].solution = @original_rebuses_by_number[b - 1]
+              grid_sol = c.solution
+              c.solution = @original_rebuses_by_number[b - 1]
+              # have to set this after setting solution because #solution= sets value to nil
+              c.puz_grid_solution = grid_sol
             end
           end
         end
       end
 
       def parse_rusr_section(section_body)
-        section_body.split(?\0).each_with_index do |reb, idx|
-          cells[idx].fill = reb  if reb && reb.size > 0
+        section_body.split(?\0).zip(cells) do |reb, c|
+          if reb && reb.size > 0
+            grid_fill = c.fill
+            c.fill = reb
+            # have to set this after setting solution because #fill= sets value to nil
+            c.puz_grid_fill = grid_fill
+          end
         end
       end
 
@@ -301,11 +329,23 @@ module Crossyglot
       end
 
       def solution_data
-        cells.map {|c| c.black? ? black_cell_char : c.solution[0]}.join
+        cells.map do |c|
+          if c.black?
+            black_cell_char
+          else 
+            (c.respond_to?(:puz_grid_solution) && c.puz_grid_solution) || c.solution[0]
+          end
+        end.join
       end
 
       def fill_data
-        cells.map {|c| c.black? ? black_cell_char : (c.fill && c.fill[0] || ?-)}.join
+        cells.map do |c|
+          if c.black?
+            black_cell_char
+          else
+            (c.respond_to?(:puz_grid_fill) && c.puz_grid_fill) || (c.fill && c.fill[0]) || ?-
+          end
+        end.join
       end
 
       def black_cell_char

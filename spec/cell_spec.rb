@@ -60,6 +60,10 @@ describe Cell do
       Cell.new('A').should_not be_rebus
       Cell.new('AB').should be_rebus
     end
+    it 'should be true if the solution is not an alphabet character' do
+      Cell.new('5').should be_rebus
+      Cell.new('%').should be_rebus
+    end
   end
   describe '#rebus_fill?' do
     it 'should be true if more than one letter is filled in' do
@@ -68,6 +72,11 @@ describe Cell do
       Cell.new('AB', fill: 'A').should_not be_rebus_fill
       Cell.new('A', fill: 'AB').should be_rebus_fill
       Cell.new('AB', fill: 'AB').should be_rebus_fill
+    end
+    it 'should be true if the fill is not an alphabet character' do
+      Cell.new('A', fill: '3').should be_rebus_fill
+      Cell.new('A', fill: ';').should be_rebus_fill
+
     end
   end
 

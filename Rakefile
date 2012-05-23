@@ -9,6 +9,17 @@ task :spec do
   exec 'rspec'
 end
 
+namespace :spec do
+  if RUBY_PLATFORM[/darwin/i]
+    desc 'Use mdfind on OS X to find and run roundtrip test for all .puz files on system'
+    task :roundtrip_all do
+      cmd = 'mdfind -0 \'kMDItemKind = "Across Crossword"\' | sort -z | ' +
+            'xargs -0 ./spec/bin/roundtrip'
+      exec cmd
+    end
+  end
+end
+
 desc 'Run the specs with watchr'
 task :watch do
   exec 'watchr spec/spec.watchr'

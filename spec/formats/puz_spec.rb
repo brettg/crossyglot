@@ -440,6 +440,13 @@ describe Formats::Puz do
       puz.cells << Cell.black
       puz.send(:solution_data).should == ':'
     end
+
+    it 'should use puz_grid_solution if is available and set' do
+      pc = Formats::PuzCell.new('3')
+      pc.puz_grid_solution = 'T'
+      puz.cells << pc
+      puz.send(:solution_data).should == 'T'
+    end
   end
 
   describe '#fill_data' do
@@ -459,6 +466,12 @@ describe Formats::Puz do
       puz.is_diagramless = true
       puz.cells << Cell.black
       puz.send(:fill_data).should == ':'
+    end
+    it 'should use puz_grid_fill_value if set' do
+      pc = Formats::PuzCell.new('A', fill:'3')
+      pc.puz_grid_fill = 'T'
+      puz.cells << pc
+      puz.send(:fill_data).should == 'T'
     end
   end
 
@@ -524,7 +537,7 @@ describe Formats::Puz do
   # writing logic.
   describe 'should correctly roundtrip' do
     %w{vanilla partially-filled rebus unchecked circles other-extras-order
-        user-rebus diagramless}.each do |fn|
+       user-rebus diagramless numeric-rebus}.each do |fn|
       it "#{fn}.puz" do
         should_roundtrip_puz_file testfile_path("#{fn}.puz")
       end
