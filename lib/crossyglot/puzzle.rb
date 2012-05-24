@@ -22,7 +22,7 @@ module Crossyglot
       @clues ||= []
     end
 
-    # zero indexed x and y coord of cell with 0, 0 being the top right
+    # zero indexed x and y coordinates of cell with 0, 0 being the top right
     def cell_at(x, y)
       if cells && x < width && y < height && x >= 0 && y >= 0
         cells[y * width + x]

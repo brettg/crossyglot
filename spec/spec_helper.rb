@@ -31,7 +31,7 @@ module TestfileHelper
 end
 
 module Roundtripper
-  def should_roundtrip_puz_file(path, save_output=false)
+  def should_roundtrip_puz_file(path, ignore_invalid_files=false, save_output=false)
     File.open(path, 'rb:ASCII-8BIT') do |puzfile|
       puz = Formats::Puz.new.parse(puzfile, true)
       out = StringIO.open('', 'wb:ASCII-8BIT') {|sio| puz.write(sio); sio.string}
@@ -43,6 +43,12 @@ module Roundtripper
 
       puzfile.rewind
       out.should == puzfile.read
+    end
+  rescue Crossyglot::InvalidPuzzleError
+    if ignore_invalid_files
+      puts [RSpec.configuration.formatters.first.send(:yellow, "\tFile Invalid:"), path].join(' ')
+    else
+      raise
     end
   end
 end

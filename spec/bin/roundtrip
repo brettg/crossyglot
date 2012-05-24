@@ -14,7 +14,7 @@ describe 'Roundtrip tests' do
   ARGV.each do |f|
     if File.exists?(f)
       it "should roundtrip #{f}" do
-        should_roundtrip_puz_file(f)
+        should_roundtrip_puz_file(f, true)
       end
     else
       puts "File #{f} not found"
