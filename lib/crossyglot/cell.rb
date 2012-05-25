@@ -4,7 +4,7 @@ module Crossyglot
     NON_REBUS_CHARS = ('A'..'Z').to_a + ('a'..'z').to_a
 
     attr_accessor :number, :solution, :fill
-    attr_accessor :has_across_clue, :has_down_clue, :is_incorrect, :is_black, :is_circled,
+    attr_accessor :across_clue, :down_clue, :is_incorrect, :is_black, :is_circled,
                   :was_previously_incorrect, :was_revealed
 
     # Returns a new Cell with is_black set to true
@@ -29,8 +29,8 @@ module Crossyglot
     def previously_incorrect?; !!@was_previously_incorrect end
     def revealed?; !!@was_revealed end
 
-    def across?; !!(number && @has_across_clue) end
-    def down?;  !!(number && @has_down_clue) end
+    def across?; !!(number && @across_clue) end
+    def down?;  !!(number && @down_clue) end
 
     def rebus?
       rebus_value?(solution)

@@ -84,13 +84,13 @@ describe Formats::Puz do
   describe '#header_cksum' do
     it 'should be the checksum of the last 5 header parts' do
       puz.headers.merge!(width: 15, height: 15, puzzle_type: 1, solution_state: 0)
-      # clue count is inferred from number of clues, so add 76
-      puz.clues.concat ['a'] * 76
+      # clue count is inferred from number of clues, so add 76 cells w/ clues
+      puz.cells.concat [Cell.new('A', number: 1, down_clue: 'down')] * 76
       puz.send(:header_cksum).should == 55810
 
       puz.headers.merge!(width: 21, height: 21, puzzle_type: 1, solution_state: 0)
-      puz.clues.clear
-      puz.clues.concat ['a'] * 140
+      puz.cells.clear
+      puz.cells.concat [Cell.new('A', number: 1, down_clue: 'down')] * 140
       puz.send(:header_cksum).should == 65028
     end
   end
@@ -100,10 +100,7 @@ describe Formats::Puz do
       puz.headers.merge!(width:  1, height: 1, puzzle_type: 1, solution_state: 0, version: '1.3')
       puz.send(:puzzle_cksum).should == 9728
 
-      puz.clues << 'The letter before B'
-      puz.send(:puzzle_cksum).should == 35852
-
-      puz.cells << Cell.new('B', number: 1, had_across_clue: 1, had_down_clue: 1)
+      puz.cells << Cell.new('B', number: 1, across_clue: 'The letter before B')
       puz.send(:puzzle_cksum).should == 18374
 
       puz.title = ''
@@ -142,17 +139,106 @@ describe Formats::Puz do
     it 'should do a bunch of funky nonsense and calculate correctly' do
       puz.headers.merge!(width: 1, height: 1, clue_count: 1, version: '1.2', puzzle_type: 1,
                          solution_state: 0)
-      puz.cells << Cell.new('B', number: 1, had_across_clue: 1, had_down_clue: 1)
+      puz.cells << Cell.new('B', number: 1, down_clue: 'first clue')
       puz.title = 'i cheated test'
       puz.author = 'the author'
       puz.copyright = '2000'
-      puz.clues << 'first clue'
+      # puz.clues << 'first clue'
       puz.notes = 'the notes'
 
       puz.send(:icheated_cksum).should == "I\x01e\xecoTE\xd9"
 
       puz.version = '1.3'
       puz.send(:icheated_cksum).should == "I\x01e\x91oTE\xb2"
+    end
+  end
+
+  describe '#renumber_cells!' do
+    describe 'for a puzzle with words longer than min word length' do
+      before do
+        grid = 'AAA.' +
+               'AAAA' +
+               '.AAA' +
+               'AAA.' +
+               'AAAA' +
+               '.AAA'
+        clues = (1..12).map(&:to_s)
+        puz.width = 4
+        puz.height = 6
+        puz.cells.concat grid.chars.map{|l| l == ?. ? Cell.black : Cell.new(l)}
+        puz.send(:renumber_cells, clues, 2)
+      end
+      it 'should set has_across_clue true to cells with no open cell to the left' do
+        across_indices = [0, 4, 9, 12, 16, 21]
+        puz.cells.each_with_index do |c, idx|
+          unless c.black?
+            c.across?.should == across_indices.include?(idx)
+          end
+        end
+      end
+      it 'should set has_down_clue true to cells with no open cell above' do
+        down_indices = [0, 1, 2, 7, 12, 19]
+        puz.cells.each_with_index do |c, idx|
+          unless c.black?
+            c.down?.should == down_indices.include?(idx)
+          end
+        end
+      end
+      it 'should give a number to cells that have an across or down clue' do
+        nums = [1,   2,   3,   nil,
+                4,   nil, nil, 5,
+                nil, 6,   nil, nil,
+                7,   nil, nil, nil,
+                8,   nil, nil, 9,
+                nil, 10,  nil, nil]
+        puz.cells.zip(nums).each do |cell, num|
+          cell.number.should == num
+        end
+      end
+    end
+
+    describe 'for puz. with varying word lengths given a shorter word length' do
+      it 'should not give shorter across words a number' do
+        puz.width = 2
+        puz.height = 1
+        clues = (1..3).map(&:to_s)
+        puz.cells.concat 2.times.map { Cell.new('A') }
+
+        puz.send(:renumber_cells, clues)
+        puz.cells.first.should_not be_across
+        puz.cells.first.should_not be_down
+        puz.cells.first.number.should be_nil
+
+        puz.send(:renumber_cells, clues, 2)
+        puz.cells.first.should be_across
+        puz.cells.first.should_not be_down
+        puz.cells.first.number.should == 1
+      end
+      it 'should not give shorter down words a number' do
+        puz.width = 1
+        puz.height = 6
+        clues = (1..7).map(&:to_s)
+        puz.cells.concat 6.times.map { Cell.new('A') }
+
+        puz.send(:renumber_cells, clues, 7)
+        puz.cells.first.should_not be_down
+        puz.cells.first.should_not be_across
+        puz.cells.first.number.should be_nil
+
+        puz.send(:renumber_cells, clues, 6)
+        puz.cells.first.should be_down
+        puz.cells.first.should_not be_across
+        puz.cells.first.number.should == 1
+      end
+      it 'should give numbers to all border cells with a min word length of one' do
+        puz.width = puz.height = 1
+        puz.cells << Cell.new('b')
+
+        puz.send(:renumber_cells, %w{1 2}, 1)
+        puz.cells.first.number.should == 1
+        puz.cells.first.should be_down
+        puz.cells.first.should be_across
+      end
     end
   end
 
@@ -236,12 +322,6 @@ describe Formats::Puz do
       expected = "\xA9 2012 Tribune Media Services, Inc.".force_encoding('ISO-8859-1')
       @vanilla_puzzle.copyright.should == expected.encode('UTF-8')
     end
-    it 'should set #clues' do
-      @vanilla_puzzle.clues.should_not be_empty
-      @vanilla_puzzle.clues.size.should == 76
-      @vanilla_puzzle.clues.first.should == 'Filled tortilla'
-      @vanilla_puzzle.clues.last.should == 'Quiz, e.g.'
-    end
     it 'should set #notes' do
       @vanilla_puzzle.notes.should be_nil
     end
@@ -271,8 +351,13 @@ describe Formats::Puz do
 
       @unchecked_puzzle.notes.encoding.should == utf8
 
-      @vanilla_puzzle.clues.each do |clue|
-        clue.encoding.should == utf8
+      @vanilla_puzzle.cells.each do |c|
+        if c.across?
+          c.across_clue.encoding.should == utf8
+        end
+        if c.down?
+          c.down_clue.encoding.should == utf8
+        end
       end
     end
 
@@ -478,8 +563,8 @@ describe Formats::Puz do
   describe '#strings_data' do
     it 'should write strings in ISO-8859-1' do
       # copyright character is different betwee latin1 and UTF-8
-      puz.clues << "\xA9".force_encoding('ISO-8859-1').encode('UTF-8')
-      puz.send(:strings_data).bytes.to_a.should == [0, 0, 0, 0xA9, 0, 0]
+      puz.title = "\xA9".force_encoding('ISO-8859-1').encode('UTF-8')
+      puz.send(:strings_data).bytes.to_a.should == [0xA9, 0, 0, 0, 0]
     end
   end
 

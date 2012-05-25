@@ -143,6 +143,8 @@ module Crossyglot
 
         parse_strings_sections(puzfile)
 
+        renumber_cells(@parsed_clues)
+
         parse_extras(puzfile)
 
         @post_end ||= ''
@@ -186,7 +188,6 @@ module Crossyglot
           end
         end
 
-        renumber_cells!
       end
 
       def parse_strings_sections(puzfile)
@@ -198,8 +199,8 @@ module Crossyglot
       end
 
       def parse_clues(puzfile)
-        clues.clear
-        headers[:clue_count].times {clues << next_string(puzfile)}
+        @parsed_clues = []
+        headers[:clue_count].times {@parsed_clues << next_string(puzfile)}
       end
 
       def parse_extras(puzfile)
@@ -269,6 +270,36 @@ module Crossyglot
         end
       end
 
+      # (Re)assigns number, across_clue and down_clue to each non black cell based on their position
+      # in the grid and the minimum word length
+      def renumber_cells(clues, min_word_length=3)
+        num = 0
+        # make sure we don't change original
+        clues = clues.dup
+        each_cell do |c, x, y|
+          unless c.black?
+            across = x == 0 || cell_at(x - 1, y).black?
+            across &&= (min_word_length - 1).times.all? do |n|
+              x1 = x + n + 1
+              x1 < width && !cell_at(x1, y).black?
+            end
+
+            down = y == 0 || cell_at(x, y - 1).black?
+            down &&= (min_word_length - 1).times.all? do |n|
+              y1 = y + n + 1
+              y1 < height && !cell_at(x, y1).black?
+            end
+
+            n = across || down ? num += 1 : nil
+
+            c.across_clue = clues.shift  if across
+            c.down_clue = clues.shift  if down
+
+            c.number = n
+          end
+        end
+      end
+
       # Next \0 delimited string from file, nil if of empty length
       def next_string(puzfile)
         s = puzfile.gets(?\0).chomp(?\0)
@@ -293,7 +324,11 @@ module Crossyglot
         end
       end
       def encoded_clues
-        clues.map {|c| encode_string_data(c)}
+        cells.inject([]) do |accum, c|
+          accum << encode_string_data(c.across_clue)  if c.across?
+          accum << encode_string_data(c.down_clue)  if c.down?
+          accum
+        end
       end
       def encode_string_data(s)
         s && s.encode(STRINGS_SECTION_ENCODING)
@@ -451,7 +486,7 @@ module Crossyglot
       end
 
       def header_cksum
-        headers[:clue_count] = clues.size
+        headers[:clue_count] = encoded_clues.size
 
         format = HEADER_FORMAT[HEADER_CKSUM_RANGE]
         values = HEADER_PARTS.keys[HEADER_CKSUM_RANGE].map{|k| headers[k] || 0}

@@ -15,11 +15,11 @@ describe Cell do
       c.solution.should == 'A'
     end
     it 'should set attributes with attr hash' do
-      c = Cell.new('A', fill: 'B', number: 14, has_across_clue: true, has_down_clue: false)
+      c = Cell.new('A', fill: 'B', number: 14, across_clue: 'across', down_clue: 'down')
       c.fill.should == 'B'
       c.number.should == 14
       c.should be_across
-      c.has_down_clue.should == false
+      c.down_clue.should == 'down'
     end
     it 'should ignore unknown attributes' do
       lambda {
@@ -81,26 +81,26 @@ describe Cell do
   end
 
   describe '#across?' do
-    it 'should be true if @has_across_clue is true and number is set' do
+    it 'should be true if @across_clue is set and number is set' do
       c = Cell.new
       c.should_not be_across
-      c.has_across_clue = true
+      c.across_clue = 'across'
       c.should_not be_across
       c.number = 5
       c.should be_across
-      c.has_across_clue = false
+      c.across_clue = nil
       c.should_not be_across
     end
   end
   describe '#down?' do
-    it 'should be true if @has_down_clue is true and number is set' do
+    it 'should be true if @down_clue is set and number is set' do
       c = Cell.new
       c.should_not be_down
-      c.has_down_clue = true
+      c.down_clue = 'down clue here!'
       c.should_not be_down
       c.number = 5
       c.should be_down
-      c.has_down_clue = false
+      c.down_clue = nil
       c.should_not be_down
     end
   end
