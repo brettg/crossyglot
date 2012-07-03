@@ -477,10 +477,10 @@ describe Formats::Puz do
         end.should_not raise_error
       end
 
-      it 'should parse file normally if strict is set to false' do
+      it 'should parse file normally if strict option is set to false' do
         lambda do
           puzzle = Formats::Puz.new.parse(testfile_path('invalid-cksum/bad-header-cksum.puz'),
-                                          false)
+                                          {strict: false})
           puzzle.title.should ==  'LA Times, Mon, Mar 26, 2012'
         end.should_not raise_error
       end
@@ -489,7 +489,7 @@ describe Formats::Puz do
           it "should raise an error if the #{cksum} checksum is invalid" do
             lambda do
               puzzle = Formats::Puz.new.parse(testfile_path("invalid-cksum/bad-#{cksum}-cksum.puz"),
-                                              true)
+                                              {strict: true})
             end.should raise_error(Formats::Puz::InvalidChecksumError)
           end
         end

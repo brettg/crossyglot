@@ -3,10 +3,6 @@ require 'spec_helper'
 describe Puzzle do
   let(:puzzle) {Puzzle.new}
 
-  describe '.parse' do
-    it 'should create correct subclass and call #parse based on file extension'
-  end
-
   describe '#cells' do
     it 'should default to an empty array' do
       puzzle.cells.should == []

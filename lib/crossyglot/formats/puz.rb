@@ -100,23 +100,43 @@ module Crossyglot
 
       def scrambled?; !!is_scrambled end
 
-      # Parse the given puzzle.
-      #
-      # @param [String, IO] path_or_io The path on disk of the puzzle or an io containing the puzzle
-      #                                data
-      # @param [Boolean] strint Whether or not to check the checksums of the puzzle while parsing
-      # @returns self
-      def parse(path_or_io, strict=false)
-        if path_or_io.is_a?(String)
-          File.open(path_or_io,'rb:ASCII-8BIT') do |puzfile|
-            parse_io(puzfile, strict)
-          end
-        else
-          parse_io(path_or_io, strict)
-        end
 
-        self
+      # Parses a puzzle from the IO object given
+      #
+      # @param [String, IO] path_or_io The path on disk of the puzzle or a subclass of IO containing
+      #                                the puzzle data
+      # @options [Hash] options Options for parsing. Includes:
+      #                         * :strict - if set to true, file checksums will be validated and an
+      #                                     exception will be raised if the do no match
+      # @returns self
+      def parse_file(path, options)
+        File.open(path, 'rb:ASCII-8BIT') do |puzfile|
+          parse_io(puzfile, options)
+        end
       end
+
+      # Parses a puzzle from the IO object given
+      #
+      # @param [IO] puzfile A subclass of IO with the puzzle data
+      # @options [Hash] options See #parse_file options
+      # @returns self
+      def parse_io(puzfile, options)
+        parse_header(puzfile)
+
+        parse_solution(puzfile)
+
+        parse_strings_sections(puzfile)
+
+        renumber_cells(@parsed_clues)
+
+        parse_extras(puzfile)
+
+        @post_end ||= ''
+        @post_end << puzfile.read
+
+        validate_checksums  if options[:strict]
+      end
+
 
       # Write out the file. If given a path the file will be created (unless it exists), if given an
       # IO the puz data will be written to the IO.
@@ -135,23 +155,6 @@ module Crossyglot
       #---------------------------------------
       #   File Parsing
       #---------------------------------------
-
-      def parse_io(puzfile, strict)
-        parse_header(puzfile)
-
-        parse_solution(puzfile)
-
-        parse_strings_sections(puzfile)
-
-        renumber_cells(@parsed_clues)
-
-        parse_extras(puzfile)
-
-        @post_end ||= ''
-        @post_end << puzfile.read
-
-        validate_checksums  if strict
-      end
 
       def parse_header(puzfile)
         puzfile.gets(MAGIC)

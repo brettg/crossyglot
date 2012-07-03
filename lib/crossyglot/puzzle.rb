@@ -1,5 +1,3 @@
-# TODO - Store clues as attributes in cells in the cell array instead of in their own array to be
-#        more general instead of mimicking .puz files
 module Crossyglot
   # The puzzle object
   class Puzzle
@@ -8,13 +6,23 @@ module Crossyglot
     attr_accessor :timer_at, :is_timer_running
     attr_accessor :is_diagramless
 
-    def self.parse(path)
-      Formats::Puz.new.parse(path)
-    end
-
     def timer_running?; !!is_timer_running end
     def diagramless?; !!is_diagramless end
 
+    # Parse the given puzzle.
+    #
+    # @param [String, IO] path_or_io The path on disk of the puzzle or a subclass of IO containing
+    #                                the puzzle data
+    # @options [Hash] strict Options to pass to parse_io or parse_file method (see subclasses)
+    # @returns self
+    def parse(path_or_io, options={})
+      send(path_or_io.is_a?(String) ? :parse_file : :parse_io, path_or_io, options)
+
+      self
+    end
+
+    # The array of cell objects which correspond to squares (black or white) in the puzzle grid.
+    # Manipulate the puzzle by manipulating the number, order and properties of the cells.
     def cells
       @cells ||= []
     end
