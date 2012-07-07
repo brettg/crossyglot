@@ -257,6 +257,7 @@ describe Formats::Puz do
       @scrambled = Formats::Puz.new.parse(testfile_path('scrambled.puz'))
     end
 
+    # TODO - move these tests into base class (and use mocks)
     it 'should accept a path' do
       @vanilla_puzzle.title.should == 'LA Times, Mon, Mar 26, 2012'
     end
@@ -264,6 +265,17 @@ describe Formats::Puz do
       puz = File.open(testfile_path('vanilla.puz'), 'rb') do |f|
         Formats::Puz.new.parse(f)
       end
+      puz.title.should == 'LA Times, Mon, Mar 26, 2012'
+    end
+
+    it 'should parse a file with #parse_file' do
+      (puz = Formats::Puz.new).parse_file(testfile_path('vanilla.puz'))
+      puz.title.should == 'LA Times, Mon, Mar 26, 2012'
+    end
+    it 'should accept an IO with #parse_io' do
+      puz = Formats::Puz.new
+      File.open(testfile_path('vanilla.puz'), 'rb') {|f| puz.parse_io(f) }
+
       puz.title.should == 'LA Times, Mon, Mar 26, 2012'
     end
 

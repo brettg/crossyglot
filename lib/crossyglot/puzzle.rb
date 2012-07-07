@@ -1,5 +1,6 @@
 module Crossyglot
-  # The puzzle object
+  # The base puzzle object containing puzzle data and common functionality. Subclasses are needed
+  # for parsing and writing out specific file types.
   class Puzzle
     attr_accessor :author, :copyright, :notes, :title
     attr_accessor :height, :width
@@ -9,7 +10,7 @@ module Crossyglot
     def timer_running?; !!is_timer_running end
     def diagramless?; !!is_diagramless end
 
-    # Parse the given puzzle.
+    # Parse the given puzzle. Passes to parse_file or parse_io method of subclass.
     #
     # @param [String, IO] path_or_io The path on disk of the puzzle or a subclass of IO containing
     #                                the puzzle data

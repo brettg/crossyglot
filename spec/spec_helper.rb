@@ -7,11 +7,16 @@ require 'fileutils'
 include Crossyglot
 
 module TestfileHelper
-  TESTFILE_DIR = File.expand_path('../input-files', __FILE__)
+  TESTFILE_DIR = File.expand_path('../puzzle-files', __FILE__)
   TMP_OUTPUT_DIR = File.expand_path('../tmp', __FILE__)
 
-  # the full path to one of the test files in input-files
+  # Returns the full path to one of the test files in puzzle-files/{puz-type}. You should be able to
+  # include or omit puz-type as long as it matches the file extension.
   def testfile_path(filename)
+    if filename.split('/').first != (ext = filename.split('.').last)
+      filename = "#{ext}/#{filename}"
+    end
+
     File.expand_path(filename, TESTFILE_DIR)
   end
 

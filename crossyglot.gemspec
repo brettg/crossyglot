@@ -13,9 +13,11 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 1.9'
 
   s.files         = `git ls-files`.split("\n")
-  s.test_files    = `git ls-files -- {spec}/*`.split("\n")
-  s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
+  s.test_files    = `git ls-files -- spec/*`.split("\n")
   s.require_paths = ['lib']
+
+  s.add_dependency 'nokogiri'
+  s.add_dependency 'rubyzip'
 
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'watchr'

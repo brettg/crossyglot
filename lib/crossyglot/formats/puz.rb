@@ -101,7 +101,7 @@ module Crossyglot
       def scrambled?; !!is_scrambled end
 
 
-      # Parses a puzzle from the IO object given
+      # Parses a puzzle from the IO object given.
       #
       # @param [String, IO] path_or_io The path on disk of the puzzle or a subclass of IO containing
       #                                the puzzle data
@@ -109,7 +109,7 @@ module Crossyglot
       #                         * :strict - if set to true, file checksums will be validated and an
       #                                     exception will be raised if the do no match
       # @returns self
-      def parse_file(path, options)
+      def parse_file(path, options={})
         File.open(path, 'rb:ASCII-8BIT') do |puzfile|
           parse_io(puzfile, options)
         end
@@ -120,7 +120,7 @@ module Crossyglot
       # @param [IO] puzfile A subclass of IO with the puzzle data
       # @options [Hash] options See #parse_file options
       # @returns self
-      def parse_io(puzfile, options)
+      def parse_io(puzfile, options={})
         parse_header(puzfile)
 
         parse_solution(puzfile)
@@ -135,6 +135,8 @@ module Crossyglot
         @post_end << puzfile.read
 
         validate_checksums  if options[:strict]
+
+        self
       end
 
 
