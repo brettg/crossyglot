@@ -27,6 +27,13 @@ module Crossyglot
         @xml = @xml.at('rectangular-puzzle')
 
         self.title = @xml.at('title').text
+        self.author = @xml.at('creator').text
+        self.copyright = @xml.at('copyright').text
+
+        @cword_elem = @xml.at('crossword')
+        @grid_elem = @cword_elem.at('grid')
+        self.height = @grid_elem['height'].to_i
+        self.height = @grid_elem['width'].to_i
 
         self
       end
