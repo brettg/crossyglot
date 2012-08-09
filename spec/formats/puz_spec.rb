@@ -121,13 +121,16 @@ describe Formats::Puz do
       puz.notes = 'Hardest puzzle possible'
       puz.send(:puzzle_cksum).should == 137
     end
-    it 'should only include notes if version == 1.3' do
-      puz.headers.merge!(width:  1, height: 1, puzzle_type: 1, solution_state: 0, version:'1.2')
+    it 'should only include notes if version >= 1.3' do
+      puz.headers.merge!(width: 1, height: 1, puzzle_type: 1, solution_state: 0, version:'1.2')
       puz.notes = 'abc'
       puz.send(:puzzle_cksum).should == 9728
 
       # note version can be passed in as float
       puz.version = 1.3
+      puz.send(:puzzle_cksum).should == 8886
+
+      puz.version = "1.4dadsfsaf"
       puz.send(:puzzle_cksum).should == 8886
 
       puz.version = nil
@@ -622,7 +625,7 @@ describe Formats::Puz do
   # writing logic.
   describe 'should correctly roundtrip' do
     %w{vanilla partially-filled rebus unchecked circles other-extras-order
-       user-rebus diagramless numeric-rebus}.each do |fn|
+       user-rebus diagramless numeric-rebus v1.4-with-notes}.each do |fn|
       it "#{fn}.puz" do
         should_roundtrip_puz_file testfile_path("#{fn}.puz")
       end

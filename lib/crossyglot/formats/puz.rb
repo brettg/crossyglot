@@ -516,10 +516,10 @@ module Crossyglot
         strings = [encoded_title, encoded_author, encoded_copyright]
         strings.reject{|s| !s || s.empty?}.map {|s| s + ?\0}.join
       end
-      # notes + \0 if notes is not empty and version == 1.3
-      # TODO - is this really >= 1.3???
+
+      # notes + \0 if notes is not empty and version >= 1.4
       def notes_for_cksum
-        if version && version.to_s == '1.3'
+        if version && version.to_f >= 1.3
           if notes && !notes.empty?
             encoded_notes + ?\0
           end

@@ -44,9 +44,10 @@ module Roundtripper
       puzfile.rewind
       out.should == puzfile.read
     end
-  rescue Crossyglot::InvalidPuzzleError
+  rescue Crossyglot::InvalidPuzzleError => e
     if ignore_invalid_files
-      puts [RSpec.configuration.formatters.first.send(:yellow, "\tFile Invalid:"), path].join(' ')
+      puts [RSpec.configuration.formatters.first.send(:yellow, "\tFile Invalid:"), path,
+            e.message].join(' ')
     else
       raise
     end
