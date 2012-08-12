@@ -26,19 +26,41 @@ module Crossyglot
         @xml.remove_namespaces!
         @xml = @xml.at('rectangular-puzzle')
 
-        self.title = @xml.at('title').text
-        self.author = @xml.at('creator').text
-        self.copyright = @xml.at('copyright').text
-
         @cword_elem = @xml.at('crossword')
         @grid_elem = @cword_elem.at('grid')
-        self.height = @grid_elem['height'].to_i
-        self.height = @grid_elem['width'].to_i
+
+        parse_metadata
+        parse_cells
+        parse_clues
 
         self
       end
 
       private
+
+      def parse_metadata
+        self.title = @xml.at('title').text
+        self.author = @xml.at('creator').text
+        self.copyright = @xml.at('copyright').text
+
+        self.height = @grid_elem['height'].to_i
+        self.height = @grid_elem['width'].to_i
+      end
+
+      def parse_cells
+        sorted_cells = @grid_elem.css('cell').sort_by{|ce| [ce['y'].to_i, ce['x'].to_i]}
+        sorted_cells.each do |cell_elem|
+          cells << if cell_elem['type'] == 'block'
+            Cell.black
+          else
+            num = cell_elem['number']
+            Cell.new(cell_elem['solution'], number: num && num.to_i)
+          end
+        end
+      end
+
+      def parse_clues
+      end
 
       # def unzip_if_zip(io)
       #   begin
