@@ -56,6 +56,5 @@ module Crossyglot
         accum
       end.freeze
     end
-
   end
 end

@@ -1,5 +1,6 @@
 # encoding: utf-8
 require 'spec_helper'
+require 'yaml'
 
 describe Formats::Jpz do
   let(:jpz) {Formats::Jpz.new}
@@ -84,7 +85,12 @@ describe Formats::Jpz do
         end
       end
 
-      it 'should set cell clues correctly'
+      it 'should set cell clues correctly' do
+        clue_file = File.expand_path('jpz/basic-unzipped-clues.yml', TESTFILE_DIR)
+        exp_clues = YAML.load_file(clue_file)
+        @basic.acrosses.should == exp_clues['Across']
+        @basic.downs.should == exp_clues['Down']
+      end
     end
   end
 end

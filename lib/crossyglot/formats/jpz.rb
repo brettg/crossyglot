@@ -60,6 +60,15 @@ module Crossyglot
       end
 
       def parse_clues
+        cells_by_number =  cells.inject({}) {|accum, c| accum[c.number] = c if c.number; accum}
+        @cword_elem.css('clues').each do |clues_elem|
+          across = clues_elem.at('title').text[/across/i]
+
+          clues_elem.css('clue').each do |clue_elem|
+            cell = cells_by_number[clue_elem['number'].to_i]
+            cell.send(across ? :across_clue= : :down_clue=, clue_elem.text)
+          end
+        end
       end
 
       # def unzip_if_zip(io)
