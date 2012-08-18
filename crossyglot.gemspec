@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
 
   s.add_dependency 'nokogiri'
-  s.add_dependency 'rubyzip'
+  s.add_dependency 'archive-zip'
 
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'watchr'
