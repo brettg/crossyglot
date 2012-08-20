@@ -8,3 +8,4 @@ doc/*
 spec/tmp/*
 TODO
 .rbenv-*
+.roundtrip-invalids

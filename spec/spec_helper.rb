@@ -29,14 +29,21 @@ module TestfileHelper
     if block_given?
       yield path
       FileUtils.rm_f(path)
+    else
+      path
     end
-
-    path
   end
 end
 
 module Roundtripper
-  def should_roundtrip_puz_file(path, ignore_invalid_files=false, save_output=false)
+  ROUNDTRIP_INVALID_FILE = '.roundtrip-invalids'
+  ROUNDTRIP_INVALIDS = if File.exists?(ROUNDTRIP_INVALID_FILE)
+    File.read(ROUNDTRIP_INVALID_FILE).split("\n").map!(&:strip)
+  else
+    []
+  end
+
+  def should_roundtrip_puz_file(path, ignore_known_invalids=false, save_output=false)
     File.open(path, 'rb:ASCII-8BIT') do |puzfile|
       puz = Formats::Puz.new.parse(puzfile, {strict: true})
       out = StringIO.open('', 'wb:ASCII-8BIT') {|sio| puz.write(sio); sio.string}
@@ -50,8 +57,8 @@ module Roundtripper
       out.should == puzfile.read
     end
   rescue Crossyglot::InvalidPuzzleError => e
-    if ignore_invalid_files
-      puts [RSpec.configuration.formatters.first.send(:yellow, "\tFile Invalid:"), path,
+    if ignore_known_invalids && ROUNDTRIP_INVALIDS.include?(path)
+      puts [RSpec.configuration.formatters.first.send(:yellow, "\tKnown Invalid:"), path,
             e.message].join(' ')
     else
       raise
