@@ -103,8 +103,7 @@ module Crossyglot
 
       # Parses a puzzle from the IO object given.
       #
-      # @param [String, IO] path_or_io The path on disk of the puzzle or a subclass of IO containing
-      #                                the puzzle data
+      # @param [String] path The path of the file
       # @options [Hash] options Options for parsing. Includes:
       #                         * :strict - if set to true, file checksums will be validated and an
       #                                     exception will be raised if the do no match
@@ -140,16 +139,26 @@ module Crossyglot
       end
 
 
-      # Write out the file. If given a path the file will be created (unless it exists), if given an
-      # IO the puz data will be written to the IO.
-      def write(path_or_io)
-        if path_or_io.is_a? String
-          File.open(path_or_io, 'wb') do |f|
-            write_to_io(f)
-          end
-        else
-          write_to_io(path_or_io)
+      # Write this puzzle out to a file at the given path
+      #
+      # @param [String] path
+      def write_file(path)
+        File.open(path, 'wb') do |f|
+          write_io(f)
         end
+      end
+
+      # Write this puzzle to given IO object
+      #
+      # @param [IO] io
+      def write_io(io)
+        io.write(@pre_magic)
+        io.write(header_data)
+        io.write(solution_data)
+        io.write(fill_data)
+        io.write(strings_data)
+        io.write(extras_data)
+        io.write(@post_end)
       end
 
       private
@@ -347,16 +356,6 @@ module Crossyglot
         headers[:puzzle_cksum] = puzzle_cksum
         headers[:header_cksum] = header_cksum
         headers[:icheated_cksum] = icheated_cksum
-      end
-
-      def write_to_io(io)
-        io.write(@pre_magic)
-        io.write(header_data)
-        io.write(solution_data)
-        io.write(fill_data)
-        io.write(strings_data)
-        io.write(extras_data)
-        io.write(@post_end)
       end
 
       def header_data

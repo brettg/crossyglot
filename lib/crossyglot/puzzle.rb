@@ -14,21 +14,34 @@ module Crossyglot
     #
     # @param [String, IO] path_or_io The path on disk of the puzzle or a subclass of IO containing
     #                                the puzzle data
-    # @options [Hash] strict Options to pass to parse_io or parse_file method (see subclasses)
-    # @returns self
+    # @param [Hash] strict Options to pass to parse_io or parse_file method (see subclasses)
+    # @returns [Puzzle] self
     def parse(path_or_io, options={})
       send(path_or_io.is_a?(String) ? :parse_file : :parse_io, path_or_io, options)
 
       self
     end
 
+    # Write out the given puzzle. Passes to write_file or write_io method of subclass.
+    #
+    # @param [String, IO] path_or_io The path on disk to be written or an IO object to write to
+    def write(path_or_io)
+      send(path_or_io.is_a?(String) ? :write_file : :write_io, path_or_io)
+    end
+
     # The array of cell objects which correspond to squares (black or white) in the puzzle grid.
     # Manipulate the puzzle by manipulating the number, order and properties of the cells.
+    #
+    # @returns [Array]
     def cells
       @cells ||= []
     end
 
     # zero indexed x and y coordinates of cell with 0, 0 being the top right
+    #
+    # @param [Fixnum] x
+    # @param [Fixnum] y
+    # @returns [Cell]
     def cell_at(x, y)
       if cells && x < width && y < height && x >= 0 && y >= 0
         cells[y * width + x]
@@ -43,6 +56,8 @@ module Crossyglot
     end
 
     # All the across clues in a(n ordered) hash keyed by number
+    #
+    # @returns [Hash]
     def acrosses
       cells.inject({}) do |accum, c|
         accum[c.number] = c.across_clue if c.across?
@@ -50,6 +65,8 @@ module Crossyglot
       end.freeze
     end
     # All the down clues in a(n ordered) hash keyed by number
+    #
+    # @returns [Hash]
     def downs
       cells.inject({}) do |accum, c|
         accum[c.number] = c.down_clue if c.down?

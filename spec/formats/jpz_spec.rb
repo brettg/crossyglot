@@ -5,8 +5,6 @@ require 'yaml'
 describe Formats::Jpz do
   let(:jpz) {Formats::Jpz.new}
 
-  # make sure a StringIO works w/ unzip
-
   describe '#parse' do
     %w{zipped unzipped}.each do |jpz_type|
       describe "for a(n) #{jpz_type} file" do
