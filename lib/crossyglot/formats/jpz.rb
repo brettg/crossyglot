@@ -4,6 +4,9 @@ require 'archive/zip'
 module Crossyglot
   module Formats
     class Jpz < Puzzle
+      PRIMARY_NAMESPACE = 'http://crossword.info/xml/crossword-compiler'
+      PUZZLE_NAMESPACE = 'http://crossword.info/xml/rectangular-puzzle'
+
       # Parses a puzzle from the IO object given.
       #
       # @param [String, IO] path_or_io The path on disk of the puzzle or a subclass of IO containing
@@ -36,6 +39,25 @@ module Crossyglot
         end
 
         self
+      end
+
+      # Write xml of this puzzle to given IO object
+      #
+      # @param [IO] io
+      def write_io(io)
+        builder = Nokogiri::XML::Builder.new do |xml|
+          xml.send('crossword-compiler-applet', xmlns: PRIMARY_NAMESPACE) do
+          end
+        end
+
+        io.write(builder.to_xml)
+      end
+
+      # Write xml of this puzzle to file at path
+      #
+      # @param [String] path
+      def write_file(path)
+        File.open(path, 'w') {|f| write_io(f)}
       end
 
       private

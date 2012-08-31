@@ -1,6 +1,7 @@
 # encoding: utf-8
 require 'spec_helper'
 require 'yaml'
+require 'nokogiri'
 
 describe Formats::Jpz do
   let(:jpz) {Formats::Jpz.new}
@@ -65,21 +66,21 @@ describe Formats::Jpz do
           end
 
           it 'should set the cell numbers correctly' do
-            nums = [1, 2, 3, 4, 5, nil, 6, 7, 8, 9, nil, 10, 11, 12, 13,
-                    14, nil, nil, nil, nil, nil, 15, nil, nil, nil, nil, 16, nil, nil, nil,
-                    17, nil, nil, nil, nil, 18, nil, nil, nil, nil, 19, nil, nil, nil, nil,
-                    nil, nil, nil, 20, nil, nil, nil, nil, nil, nil, 21, nil, nil, nil, nil,
-                    22, 23, 24, nil, nil, nil, nil, 25, 26, 27, nil, nil, nil, nil, nil,
-                    28, nil, nil, nil, nil, nil, 29, nil, nil, nil, nil, 30, nil, nil, nil,
-                    31, nil, nil, nil, 32, 33, nil, nil, nil, nil, 34, nil, nil, nil, nil,
-                    35, nil, nil, nil, 36, nil, nil, nil, 37, nil, nil, nil, 38, 39, 40,
-                    nil, nil, nil, 41, nil, nil, nil, 42, nil, nil, nil, 43, nil, nil, nil,
-                    44, 45, 46, nil, nil, 47, nil, nil, nil, nil, nil, 48, nil, nil, nil,
-                    49, nil, nil, nil, 50, nil, nil, nil, nil, 51, 52, nil, nil, nil, nil,
-                    53, nil, nil, nil, nil, nil, nil, nil, 54, nil, nil, nil, nil, nil, nil,
-                    55, nil, nil, nil, nil, 56, 57, 58, nil, nil, nil, nil, 59, 60, 61,
-                    62, nil, nil, nil, nil, 63, nil, nil, nil, nil, 64, nil, nil, nil, nil,
-                    65, nil, nil, nil, nil, 66, nil, nil, nil, nil, 67, nil, nil, nil, nil]
+            nums = [1,   2,   3,   4,   5,   nil, 6,   7,   8,   9,   nil, 10,  11,  12,  13,
+                    14,  nil, nil, nil, nil, nil, 15,  nil, nil, nil, nil, 16,  nil, nil, nil,
+                    17,  nil, nil, nil, nil, 18,  nil, nil, nil, nil, 19,  nil, nil, nil, nil,
+                    nil, nil, nil, 20,  nil, nil, nil, nil, nil, nil, 21,  nil, nil, nil, nil,
+                    22,  23,  24,  nil, nil, nil, nil, 25,  26,  27,  nil, nil, nil, nil, nil,
+                    28,  nil, nil, nil, nil, nil, 29,  nil, nil, nil, nil, 30,  nil, nil, nil,
+                    31,  nil, nil, nil, 32,  33,  nil, nil, nil, nil, 34,  nil, nil, nil, nil,
+                    35,  nil, nil, nil, 36,  nil, nil, nil, 37,  nil, nil, nil, 38,  39,  40,
+                    nil, nil, nil, 41,  nil, nil, nil, 42,  nil, nil, nil, 43,  nil, nil, nil,
+                    44,  45,  46,  nil, nil, 47,  nil, nil, nil, nil, nil, 48,  nil, nil, nil,
+                    49,  nil, nil, nil, 50,  nil, nil, nil, nil, 51,  52,  nil, nil, nil, nil,
+                    53,  nil, nil, nil, nil, nil, nil, nil, 54,  nil, nil, nil, nil, nil, nil,
+                    55,  nil, nil, nil, nil, 56,  57,  58,  nil, nil, nil, nil, 59,  60,  61,
+                    62,  nil, nil, nil, nil, 63,  nil, nil, nil, nil, 64,  nil, nil, nil, nil,
+                    65,  nil, nil, nil, nil, 66,  nil, nil, nil, nil, 67,  nil, nil, nil, nil]
             @basic.cells.zip(nums).each do |cell, n|
               cell.number.should == n
             end
@@ -93,6 +94,44 @@ describe Formats::Jpz do
           end
         end
       end
+    end
+  end
+
+  describe '#write and component methods' do
+    it 'should write xml to an IO given an IO' do
+      io = StringIO.new
+      jpz.write(io)
+      xml = io.string
+      xml.size.should > 0
+    end
+    it 'should write a file to the given a path' do
+      tmp_output_path('puzwrite') do |tmp_path|
+        jpz.write(tmp_path)
+        File.exists?(tmp_path).should be_true
+      end
+    end
+
+    describe 'should output the...' do
+      before(:all) do
+        io = StringIO.new
+        jpz.write(io)
+        @jpz_xml = Nokogiri::XML(io.string)
+      end
+
+      def self.should_contain_node(node_name, namespace, content=nil)
+        it node_name do
+          (node = @jpz_xml.at("ns|#{node_name}", 'ns' => namespace)).should_not be_nil
+          node.content.should == content  if content
+        end
+      end
+      should_contain_node('crossword-compiler-applet', Formats::Jpz::PRIMARY_NAMESPACE)
+
+      it 'rectangular-puzzle'
+      it 'author'
+      it 'title'
+      it 'copyright'
+      it 'height'
+      it 'width'
     end
   end
 end
