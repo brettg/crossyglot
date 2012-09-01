@@ -122,35 +122,54 @@ describe Formats::Jpz do
         io = StringIO.new
         jpz.write(io)
         @jpz_xml = Nokogiri::XML(io.string)
+        @current_node = @jpz_xml
       end
 
-      def self.should_contain_node(node_name, namespace, content_method=nil)
+      def subnode_of_current(name, namespace)
+        @current_node.at("ns|#{name}", 'ns' => namespace)
+      end
+      def should_contain_node(name, namespace, content_method=nil)
+        (node = subnode_of_current(name, namespace)).should_not be_nil
+        if content_method
+          node.content.should == jpz.send(content_method)
+        end
+      end
+
+      def self.should_contain_node(node_name, namespace, content_method=nil, &block)
         it "<#{node_name}>" do
-          (node = @jpz_xml.at("ns|#{node_name}", 'ns' => namespace)).should_not be_nil
-          if content_method
-            node.content.should == jpz.send(content_method)
+          should_contain_node(node_name, namespace, content_method)
+        end
+
+        if block_given?
+          describe "<#{node_name}> contents" do
+            before do
+              @current_node = subnode_of_current(node_name, namespace)
+            end
+            self.instance_eval &block
           end
         end
       end
-      should_contain_node('crossword-compiler-applet', Formats::Jpz::PRIMARY_NAMESPACE)
-      should_contain_node('rectangular-puzzle', Formats::Jpz::PUZZLE_NAMESPACE)
-      should_contain_node('author', Formats::Jpz::PUZZLE_NAMESPACE, :author)
-      should_contain_node('title', Formats::Jpz::PUZZLE_NAMESPACE, :title)
-      should_contain_node('copyright', Formats::Jpz::PUZZLE_NAMESPACE, :copyright)
 
-      should_contain_node('grid', Formats::Jpz::PUZZLE_NAMESPACE)
-      describe '<grid> attributes' do
-        before do
-          @grid_node = @jpz_xml.at('ns|grid', 'ns' => Formats::Jpz::PUZZLE_NAMESPACE)
-          puts @grid_node
-        end
-        it 'width' do
-          @grid_node['width'].to_i.should == jpz.width
-        end
-        it 'height' do
-          @grid_node['height'].to_i.should == jpz.height
+      should_contain_node('crossword-compiler-applet', Formats::Jpz::PRIMARY_NAMESPACE) do
+        should_contain_node('rectangular-puzzle', Formats::Jpz::PUZZLE_NAMESPACE) do
+
+          should_contain_node('metadata', Formats::Jpz::PUZZLE_NAMESPACE) do
+            should_contain_node('creator', Formats::Jpz::PUZZLE_NAMESPACE, :author)
+            should_contain_node('title', Formats::Jpz::PUZZLE_NAMESPACE, :title)
+            should_contain_node('copyright', Formats::Jpz::PUZZLE_NAMESPACE, :copyright)
+          end
+
+          should_contain_node('grid', Formats::Jpz::PUZZLE_NAMESPACE) do
+            it 'width' do
+              @current_node['width'].to_i.should == jpz.width
+            end
+            it 'height' do
+              @current_node['height'].to_i.should == jpz.height
+            end
+          end
         end
       end
+
     end
   end
 end

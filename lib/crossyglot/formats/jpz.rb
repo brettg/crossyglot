@@ -48,9 +48,11 @@ module Crossyglot
         builder = Nokogiri::XML::Builder.new do |xml|
           xml.send('crossword-compiler-applet', xmlns: PRIMARY_NAMESPACE) do
             xml.send('rectangular-puzzle', xmlns: PUZZLE_NAMESPACE) do
-              xml.author author
-              xml.title title
-              xml.copyright copyright
+              xml.metadata do
+                xml.creator author
+                xml.title title
+                xml.copyright copyright
+              end
 
               xml.grid(height: height, width: width) do
 
