@@ -30,7 +30,7 @@ describe Formats::Jpz do
         end
 
         it 'should set #width' do
-          @basic.height.should == 15
+          @basic.width.should == 15
         end
 
         describe 'setting #cells' do

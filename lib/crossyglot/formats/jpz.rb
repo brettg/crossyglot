@@ -79,7 +79,7 @@ module Crossyglot
         self.copyright = @xml.at('copyright').text
 
         self.height = @grid_elem['height'].to_i
-        self.height = @grid_elem['width'].to_i
+        self.width = @grid_elem['width'].to_i
       end
 
       def parse_cells
