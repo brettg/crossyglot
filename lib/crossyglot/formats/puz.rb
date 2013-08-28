@@ -6,17 +6,23 @@ module Crossyglot
       # These will be used for the grid blocks of the .puz file. Generally they should
       # not be used externally in preference to only used #solution and #fill, which will both set
       # their puz_grid_* compliment to nil when set themself.
-      attr_accessor :puz_grid_solution, :puz_grid_fill
+      attr_accessor :puz_grid_solution, :puz_grid_fill, :puz_is_rebus
 
       # Overriden to also set #puz_grid_solution to nil when #solution is set
       def solution=(new_solution)
         @puz_grid_solution = nil
+        @puz_is_rebus = nil
         super
       end
       # Overridden to also set #puz_grid_fill to nil when #fill is set
       def fill=(new_fill)
         @puz_grid_fill = nil
         super
+      end
+      # Override because sometimes puz files have a rebus cell that only gets represented as a
+      # single letter.
+      def rebus?
+        puz_is_rebus || super
       end
     end
 
@@ -28,7 +34,7 @@ module Crossyglot
       ICHEATED_MASK = 'ICHEATED'.unpack('C*')
       # TOOD: Is this easy to infer somehow from HEADER_FORMAT?
       HEADER_LENGTH = 52
-      # The parts of the header and there representation for String#unpack, IN ORDER!
+      # The parts of the header and their representation for String#unpack, IN ORDER!
       HEADER_PARTS = {puzzle_cksum: 'v',
                       magic: 'a12',
                       header_cksum: 'v',
@@ -194,11 +200,11 @@ module Crossyglot
         cells.clear
 
         # Extra to_a prevents a segfault on ruby 1.9.2 (fixed in 1.9.3)
-        solution.each_char.zip(fill.each_char.to_a) do |sol, fill|
+        solution.each_char.zip(fill.each_char.to_a) do |sol, fl|
           cells << if ?. == sol ||  ?: == sol
             Cell.black
           else
-            PuzCell.new(sol, fill: fill == ?- ? nil : fill)
+            PuzCell.new(sol, fill: fl == ?- ? nil : fl)
           end
         end
 
@@ -267,6 +273,7 @@ module Crossyglot
               grid_sol = c.solution
               c.solution = @original_rebuses_by_number[b - 1]
               # have to set this after setting solution because #solution= sets value to nil
+              c.puz_is_rebus = true
               c.puz_grid_solution = grid_sol
             end
           end
@@ -399,7 +406,7 @@ module Crossyglot
 
 
       def extras_data
-        @grbs_body = @rbtl_body = nil
+        @grbs_body = @rtbl_body = nil
 
         @original_extras_order ||= []
         other_needed_sections = (EXTRA_SECTIONS - @original_extras_order).select do |s|
@@ -459,9 +466,9 @@ module Crossyglot
           rebus_strings = cells.select(&:rebus?).map(&:solution)
           # Preserve the original numbering, but also allow for new rebuses
           old_numbers = (@original_rebuses_by_number || {}).invert
-          c = old_numbers.values.max || 0
+          cnt = old_numbers.values.max || 0
           rebuses = rebus_strings.inject({}) do |accum, s|
-            accum[s] = old_numbers[s] || (c += 1)
+            accum[s] = old_numbers[s] || (cnt += 1)
             accum
           end
 

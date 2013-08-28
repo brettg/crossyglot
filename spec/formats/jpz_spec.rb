@@ -166,6 +166,8 @@ describe Formats::Jpz do
             it 'height' do
               @current_node['height'].to_i.should == jpz.height
             end
+
+            # should_contain_node('grid', Formats::Jpz::PUZZLE_NAMESPACE) do
           end
         end
       end

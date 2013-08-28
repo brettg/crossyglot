@@ -55,7 +55,6 @@ module Crossyglot
               end
 
               xml.grid(height: height, width: width) do
-
               end
             end
           end
