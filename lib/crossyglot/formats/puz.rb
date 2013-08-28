@@ -293,7 +293,7 @@ module Crossyglot
 
       # (Re)assigns number, across_clue and down_clue to each non black cell based on their position
       # in the grid and the minimum word length
-      def renumber_cells(clues, min_word_length=3)
+      def renumber_cells(clues, min_word_length=2)
         num = 0
         # make sure we don't change original
         clues = clues.dup
