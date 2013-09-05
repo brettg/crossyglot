@@ -43,6 +43,7 @@ module Roundtripper
     []
   end
 
+
   def should_roundtrip_puz_file(path, ignore_known_invalids=false, save_output=false)
     File.open(path, 'rb:ASCII-8BIT') do |puzfile|
       puz = Formats::Puz.new.parse(puzfile, {strict: true})
@@ -54,7 +55,22 @@ module Roundtripper
       end
 
       puzfile.rewind
-      out.should == puzfile.read
+      input = puzfile.read
+
+      if ENV['DEBUG'] && input != out
+        puts
+        0.upto(input.size) do |n|
+          if input[n] == out[n]
+            print green(input[n])
+          else
+            puts red(input[n])
+            puts "Mismatch at offset: %d  Input:%d Output:%d" % [n, input.getbyte(n), out.getbyte(n)]
+            break
+          end
+        end
+      end
+
+      out.should == input
     end
   rescue Crossyglot::InvalidPuzzleError => e
     if ignore_known_invalids && ROUNDTRIP_INVALIDS.include?(path)
@@ -64,6 +80,21 @@ module Roundtripper
       raise
     end
   end
+
+  private
+
+  def color(text, color_code)
+    "#{color_code}#{text}\e[0m"
+  end
+
+  def red(text)
+    color(text, "\e[31m")
+  end
+
+  def green(text)
+    color(text, "\e[32m")
+  end
+
 end
 
 RSpec.configure do |c|

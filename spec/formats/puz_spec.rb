@@ -207,7 +207,7 @@ describe Formats::Puz do
         clues = (1..3).map(&:to_s)
         puz.cells.concat 2.times.map { Cell.new('A') }
 
-        puz.send(:renumber_cells, clues)
+        puz.send(:renumber_cells, clues, 3)
         puz.cells.first.should_not be_across
         puz.cells.first.should_not be_down
         puz.cells.first.number.should be_nil

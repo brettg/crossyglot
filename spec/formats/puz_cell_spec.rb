@@ -62,4 +62,33 @@ describe Formats::PuzCell do
       cell.should be_rebus
     end
   end
+  describe '#puz_is_rebus_fill' do
+    it 'should be nil by default' do
+      cell.puz_is_rebus_fill.should be_nil
+    end
+    it 'should be settable' do
+      cell.puz_is_rebus_fill = true
+      cell.puz_is_rebus_fill.should == true
+    end
+    it 'should get set to nil again when fill is set' do
+      cell.puz_is_rebus_fill = true
+      cell.fill = 'A'
+      cell.fill.should == 'A'
+      cell.puz_is_rebus_fill.should be_nil
+    end
+  end
+  describe '#rebus_fill?' do
+    it 'should be false for normal solution' do
+      cell.fill = 'A'
+      cell.should_not be_rebus_fill
+    end
+    it 'should be true for rebus solution' do
+      cell.fill = 'ABC'
+      cell.should be_rebus_fill
+    end
+    it 'should be true if puz_is_rebus is true' do
+      cell.puz_is_rebus_fill = true
+      cell.should be_rebus_fill
+    end
+  end
 end

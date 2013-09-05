@@ -1,12 +1,14 @@
 module Crossyglot
   module Formats
     # Override the base Cell so we can save both the solution and fill values from the grid section
-    # in the .puz file and the extra rebus sections
+    # in the .puz file and the extra rebus sections as well as save whether or not the puz file had
+    # the cell marked as rebus (solution or fill) because sometimes .puz files have values that
+    # don't look like rebuses (e.g. single letters) marked as rebuses.
     class PuzCell < Cell
       # These will be used for the grid blocks of the .puz file. Generally they should
       # not be used externally in preference to only used #solution and #fill, which will both set
       # their puz_grid_* compliment to nil when set themself.
-      attr_accessor :puz_grid_solution, :puz_grid_fill, :puz_is_rebus
+      attr_accessor :puz_grid_solution, :puz_grid_fill, :puz_is_rebus, :puz_is_rebus_fill
 
       # Overriden to also set #puz_grid_solution to nil when #solution is set
       def solution=(new_solution)
@@ -17,12 +19,16 @@ module Crossyglot
       # Overridden to also set #puz_grid_fill to nil when #fill is set
       def fill=(new_fill)
         @puz_grid_fill = nil
+        @puz_is_rebus_fill = nil
         super
       end
       # Override because sometimes puz files have a rebus cell that only gets represented as a
       # single letter.
       def rebus?
         puz_is_rebus || super
+      end
+      def rebus_fill?
+        puz_is_rebus_fill || super
       end
     end
 
@@ -286,6 +292,7 @@ module Crossyglot
             grid_fill = c.fill
             c.fill = reb
             # have to set this after setting solution because #fill= sets value to nil
+            c.puz_is_rebus_fill = true
             c.puz_grid_fill = grid_fill
           end
         end
