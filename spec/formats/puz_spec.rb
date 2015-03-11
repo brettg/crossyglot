@@ -1,3 +1,4 @@
+# encoding: UTF-8
 require 'spec_helper'
 
 describe Formats::Puz do
@@ -149,10 +150,10 @@ describe Formats::Puz do
       # puz.clues << 'first clue'
       puz.notes = 'the notes'
 
-      puz.send(:icheated_cksum).should == "I\x01e\xecoTE\xd9"
+      puz.send(:icheated_cksum).should == "I\x01e\xecoTE\xd9".b
 
       puz.version = '1.3'
-      puz.send(:icheated_cksum).should == "I\x01e\x91oTE\xb2"
+      puz.send(:icheated_cksum).should == "I\x01e\x91oTE\xb2".b
     end
   end
 
@@ -301,11 +302,11 @@ describe Formats::Puz do
       {puzzle_cksum: 41078,
         magic: Formats::Puz::MAGIC,
         header_cksum: 55810,
-        icheated_cksum: "\x4B\xED\x16\x69\x9B\x07\x37\xEE",
+        icheated_cksum: "\x4B\xED\x16\x69\x9B\x07\x37\xEE".b,
         version: '1.2c',
         unknown1: 0,
         scrambled_cksum: 0,
-        unknown2: "\0\0\0\0\x35\x04\x91\x7C\x3E\x04\x91\x7C",
+        unknown2: "\0\0\0\0\x35\x04\x91\x7C\x3E\x04\x91\x7C".b,
         width: 15,
         height: 15,
         clue_count: 76,

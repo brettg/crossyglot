@@ -9,3 +9,4 @@ spec/tmp/*
 TODO
 .rbenv-*
 .roundtrip-invalids
+.ruby-version

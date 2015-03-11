@@ -36,7 +36,7 @@ module Crossyglot
     class Puz < Puzzle
       class InvalidChecksumError < InvalidPuzzleError; end
 
-      MAGIC = "ACROSS&DOWN\0"
+      MAGIC = "ACROSS&DOWN\0".b
       ICHEATED_MASK = 'ICHEATED'.unpack('C*')
       # TOOD: Is this easy to infer somehow from HEADER_FORMAT?
       HEADER_LENGTH = 52

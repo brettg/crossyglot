@@ -115,5 +115,4 @@ describe Puzzle do
       p.downs.should == {}
     end
   end
-
 end

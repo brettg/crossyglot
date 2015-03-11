@@ -47,8 +47,10 @@ module Roundtripper
   def should_roundtrip_puz_file(path, ignore_known_invalids=false, save_output=false)
     File.open(path, 'rb:ASCII-8BIT') do |puzfile|
       puz = Formats::Puz.new.parse(puzfile, {strict: true})
-      out = StringIO.open('', 'wb:ASCII-8BIT') {|sio| puz.write(sio); sio.string}
-      out.force_encoding('BINARY')
+
+      sio = StringIO.new(''.b, 'wb')
+      puz.write(sio)
+      out = sio.string
 
       if save_output
         File.open(tmp_output_path(File.basename(path)), 'wb') {|out_f| out_f << out}
