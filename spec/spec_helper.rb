@@ -36,7 +36,7 @@ module TestfileHelper
 end
 
 module Roundtripper
-  ROUNDTRIP_INVALID_FILE = '.roundtrip-invalids'
+  ROUNDTRIP_INVALID_FILE = File.expand_path('~/.crossyglot/roundtrip-invalids')
   ROUNDTRIP_INVALIDS = if File.exists?(ROUNDTRIP_INVALID_FILE)
     File.read(ROUNDTRIP_INVALID_FILE).split("\n").map!(&:strip)
   else
@@ -73,13 +73,6 @@ module Roundtripper
       end
 
       out.should == input
-    end
-  rescue Crossyglot::InvalidPuzzleError => e
-    if ignore_known_invalids && ROUNDTRIP_INVALIDS.include?(path)
-      puts [RSpec.configuration.formatters.first.send(:yellow, "\tKnown Invalid:"), path,
-            e.message].join(' ')
-    else
-      raise
     end
   end
 

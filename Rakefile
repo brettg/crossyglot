@@ -16,6 +16,9 @@ namespace :spec do
       task :roundtrip_all do
         cmd = 'mdfind -0 \'kMDItemKind = "Across Crossword"\' | sort -z | ' +
               'xargs -0 ./spec/bin/roundtrip'
+        cmd = 'mdfind -0 \'kMDItemFSName = "*.puz"\' | sort -z | ' +
+              'xargs -0 ./spec/bin/roundtrip'
+        puts cmd
         exec cmd
       end
     end

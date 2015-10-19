@@ -13,8 +13,12 @@ require File.expand_path('../../spec_helper', __FILE__)
 describe 'Roundtrip tests' do
   ARGV.each do |f|
     if File.exists?(f)
-      it "should roundtrip #{f}" do
-        should_roundtrip_puz_file(f, true)
+      if Roundtripper::ROUNDTRIP_INVALIDS.include?(f)
+        xit "is known invalid #{f}"
+      else
+        it "should roundtrip #{f}" do
+          should_roundtrip_puz_file(f, true)
+        end
       end
     else
       puts "File #{f} not found"
@@ -24,8 +28,7 @@ end
 
 # Force lack of fail_fast in case it is set in ~/.rspec
 # There's no --no-fail-fast option to do this the easy way
-include RSpec::Core
-options = ConfigurationOptions.new([])
-options.parse_options
+options = RSpec::Core::ConfigurationOptions.new([])
 options.options[:fail_fast] = false
-CommandLine.new(options).run($stderr, $stdout)
+RSpec::Core::Runner.new(options).run($stderr, $stdout)
+
