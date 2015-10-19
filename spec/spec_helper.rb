@@ -99,7 +99,9 @@ module Roundtripper
 
 end
 
-RSpec.configure do |c|
+RSpec.configure do |config|
   include TestfileHelper
   include Roundtripper
+
+  config.expect_with(:rspec) { |c| c.syntax = :should }
 end

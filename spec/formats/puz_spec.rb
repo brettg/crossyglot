@@ -520,7 +520,7 @@ describe Formats::Puz do
     it 'should write a file to the given a path' do
       tmp_output_path('puzwrite') do |tmp_path|
         puz.write(tmp_path)
-        File.exists?(tmp_path).should be_true
+        File.exists?(tmp_path).should be_truthy
       end
     end
   end
