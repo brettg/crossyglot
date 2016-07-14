@@ -96,5 +96,5 @@ RSpec.configure do |config|
   include TestfileHelper
   include Roundtripper
 
-  config.expect_with(:rspec) { |c| c.syntax = :should }
+  config.expect_with(:rspec) { |c| c.syntax = [:should, :expect] }
 end

@@ -37,16 +37,8 @@ watch('^lib/(.*)\.rb'        ) {run_all_specs}
 # Ctrl-\
 #
 Signal.trap 'INT' do
-  if @sent_an_int
-    puts '  Shutting down now.'
-    exit
-  else
-    puts '  One INT runs the tests again. Two shuts down.'
-    @sent_an_int = true
-    Kernel.sleep 1.5
-    run_all_specs
-    @sent_an_int = false
-  end
+  puts '  Shutting down now.'
+  exit
 end
 
 run_all_specs

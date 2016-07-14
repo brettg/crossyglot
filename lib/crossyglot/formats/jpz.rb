@@ -52,9 +52,11 @@ module Crossyglot
                 xml.creator author
                 xml.title title
                 xml.copyright copyright
+                xml.description description  if description
               end
 
               xml.grid(height: height, width: width) do
+                write_cells(xml)
               end
             end
           end
@@ -102,6 +104,20 @@ module Crossyglot
             cell = cells_by_number[clue_elem['number'].to_i]
             cell.send(across ? :across_clue= : :down_clue=, clue_elem.text)
           end
+        end
+      end
+
+      def write_cells(xml)
+        each_cell do |cell, x, y|
+          cell_attrs = {x: x, y: y}
+          if cell.black?
+            cell_attrs[:type] = 'block'
+          else
+            cell_attrs[:solution] = cell.solution
+            cell_attrs[:number] = cell.number  if cell.number
+          end
+
+          xml.cell cell_attrs
         end
       end
 

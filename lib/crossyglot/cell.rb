@@ -9,7 +9,7 @@ module Crossyglot
 
     # Returns a new Cell with is_black set to true
     def self.black
-      new.tap {|c| c.is_black = true}
+      new.tap { |c| c.is_black = true }
     end
 
     # Create a new Cell and set basic attributes

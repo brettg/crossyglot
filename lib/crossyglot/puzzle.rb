@@ -2,7 +2,7 @@ module Crossyglot
   # The base puzzle object containing puzzle data and common functionality. Subclasses are needed
   # for parsing and writing out specific file types.
   class Puzzle
-    attr_accessor :author, :copyright, :notes, :title
+    attr_accessor :author, :copyright, :notes, :title, :description
     attr_accessor :height, :width
     attr_accessor :timer_at, :is_timer_running
     attr_accessor :is_diagramless
