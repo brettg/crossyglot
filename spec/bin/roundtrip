@@ -17,7 +17,7 @@ describe 'Roundtrip tests' do
         xit "is known invalid #{f}"
       else
         it "should roundtrip #{f}" do
-          should_roundtrip_puz_file(f, true)
+          should_roundtrip_puz_file(f, true, ENV['CROSSYGLOT_SAVE'])
         end
       end
     else

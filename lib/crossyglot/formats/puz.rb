@@ -63,7 +63,6 @@ module Crossyglot
 
       HEADER_DEFAULTS = {magic: MAGIC, version: '1.3', puzzle_type: 1}
 
-
       STRINGS_SECTION_ENCODING = 'ISO-8859-1'
 
       EXTRA_SECTIONS = %w{GEXT LTIM GRBS RTBL RUSR}
