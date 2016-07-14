@@ -109,7 +109,7 @@ module Crossyglot
 
       def write_cells(xml)
         each_cell do |cell, x, y|
-          cell_attrs = {x: x, y: y}
+          cell_attrs = {x: x + 1, y: y + 1}
           if cell.black?
             cell_attrs[:type] = 'block'
           else
@@ -130,7 +130,6 @@ module Crossyglot
         io.rewind
         yield io
       end
-
     end
   end
 end

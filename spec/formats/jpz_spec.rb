@@ -148,9 +148,27 @@ describe Formats::Jpz do
       end
 
       context 'the <cell> nodes' do
-        subject { super().css('ns|grid ns|cell', ns: Formats::Jpz::PUZZLE_NAMESPACE) }
+        subject { super().css('ns|grid > ns|cell', ns: Formats::Jpz::PUZZLE_NAMESPACE) }
         it('has one for each cell') { expect(subject.count).to eql(jpz.width * jpz.height) }
+
+        context 'for a numbered cell' do
+          # <cell x="2" y="10" solution="A" number="45"></cell>
+          subject { super().at('[x="2"][y="10"]') }
+
+          it('includes a solution attribute') { expect(subject['solution']).to eql('A') }
+          it('includes a number attribute') { expect(subject['number']).to eql('45') }
+          it('does not include a type attribute') { expect(subject['type']).to be_nil }
+        end
+        context 'for a black cell' do
+          # <cell x="2" y="4" type="block"></cell>
+          subject { super().at('[x="2"][y="4"]') }
+
+          it('does not include a solution attribute') { expect(subject['solution']).to be_nil }
+          it('does not include a number attribute') { expect(subject['number']).to be_nil }
+          it('includes a type attribute') { expect(subject['type']).to eql('block') }
+        end
       end
+
     end
   end
 end
