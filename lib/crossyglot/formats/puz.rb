@@ -467,6 +467,9 @@ module Crossyglot
 
       # These sections need to be created together, this is how we prevent doing it twice while
       # maintaining the #{section_name}_section_data method naming scheme
+      #
+      # Though numbering will be preserved if there are duplicates or extra crap in the original
+      # rebus section it will not be preserved through a roundtrip.
       def set_grbs_and_rtbl_section_data
         unless @grbs_body
           rebus_strings = cells.select(&:rebus?).map(&:solution)
