@@ -73,5 +73,12 @@ module Crossyglot
         accum
       end.freeze
     end
+
+    # The total number of word answers (and thus clues).
+    #
+    # @returns [Fixnum]
+    def word_count
+      cells.inject(0) { |a, c| a + (c.across? ? 1 : 0) + (c.down? ? 1 : 0) }
+    end
   end
 end
