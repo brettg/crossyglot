@@ -63,9 +63,9 @@ module Roundtripper
         puts
         0.upto(input.size) do |n|
           if input[n] == out[n]
-            print green(input[n])
+            print green(input[n].inspect[1..-2])
           else
-            puts red(input[n])
+            puts red(input[n].inspect[1..-2])
             puts "Mismatch at offset: %d  Input:%d Output:%d" % [n, input.getbyte(n), out.getbyte(n)]
             break
           end
