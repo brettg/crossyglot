@@ -108,11 +108,11 @@ describe Formats::Jpz do
       let(:parsed_output) { Nokogiri::XML(output_string) }
       subject { parsed_output }
 
-      def find_subnode(current, name, namespace)
+      def find_subnode(current, name, namespace: Formats::Jpz::PUZZLE_NAMESPACE)
         current.at("ns|#{name}", 'ns' => namespace)
       end
       def contains_node(name, namespace, content_method=nil)
-        expect(node = find_subnode(subject, name, namespace)).not_to be_nil
+        expect(node = find_subnode(subject, name, namespace: namespace)).not_to be_nil
         expect(node.content).to eql(jpz.public_send(content_method))  if content_method
       end
 
@@ -123,7 +123,7 @@ describe Formats::Jpz do
 
         if block_given?
           describe "<#{node_name}>" do
-            subject { find_subnode(super(), node_name, namespace) }
+            subject { find_subnode(super(), node_name, namespace: namespace) }
             self.instance_eval(&block)
           end
         end
@@ -169,6 +169,44 @@ describe Formats::Jpz do
         end
       end
 
+      xcontext 'the <word> nodes' do
+        subject do
+          super().css('ns|rectangular-puzzle ns|word', ns: Formats::Jpz::PUZZLE_NAMESPACE)
+        end
+        it 'has one for each clue' do
+          expect(subject.count).to eql(jpz.word_count)
+        end
+      end
+
+      context 'the <clues> nodes' do
+        subject { super().css('ns|clues', ns: Formats::Jpz::PUZZLE_NAMESPACE) }
+
+        it('has two') do
+          puts subject.map { |s| s.at('title') }.inspect
+          expect(subject.count).to eql(2)
+        end
+
+        context 'the across <clues>' do
+          subject { super().detect { |clues| find_subnode(clues, 'title').to_s[/across/i] } }
+          it 'has one <clue> for each across' do
+            expect(subject.css('ns|clue',
+                               ns: Formats::Jpz::PUZZLE_NAMESPACE).size).to eql(jpz.acrosses.size)
+          end
+          it 'matches the number and clues' do
+            expect(subject.at('[number="16"]').content).to eql('Valhalla honcho')
+          end
+        end
+        context 'the down <clues>' do
+          subject { super().detect { |clues| find_subnode(clues, 'title').to_s[/down/i] } }
+          it 'has one <clue> for each down' do
+            expect(subject.css('ns|clue',
+                               ns: Formats::Jpz::PUZZLE_NAMESPACE).size).to eql(jpz.downs.size)
+          end
+          it 'matches the number and clues' do
+            expect(subject.at('[number="18"]').content).to eql('"Fore" site?')
+          end
+        end
+      end
     end
   end
 end

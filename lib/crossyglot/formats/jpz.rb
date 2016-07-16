@@ -58,6 +58,8 @@ module Crossyglot
               xml.grid(height: height, width: width) do
                 write_cells(xml)
               end
+
+              write_clues(xml)
             end
           end
         end
@@ -118,6 +120,20 @@ module Crossyglot
           end
 
           xml.cell cell_attrs
+        end
+      end
+
+      def write_clues(xml)
+        write_clue_set(xml, 'Across', acrosses)
+        write_clue_set(xml, 'Down', downs)
+      end
+
+      def write_clue_set(xml, title, clues)
+        xml.clues(ordering: 'normal') do
+          xml.title title
+          clues.each do |(n, clue)|
+            xml.clue clue, number: n
+          end
         end
       end
 
