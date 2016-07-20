@@ -18,7 +18,6 @@ module Crossyglot
     # @returns [Puzzle] self
     def parse(path_or_io, options={})
       send(path_or_io.is_a?(String) ? :parse_file : :parse_io, path_or_io, options)
-
       self
     end
 
@@ -51,7 +50,7 @@ module Crossyglot
     # Yields each cell along with x and y coord in grid (zero indexed)
     def each_cell
       cells.each_with_index do |c, idx|
-        yield c, *idx.divmod(width).reverse
+        yield c, *(width ? idx.divmod(width).reverse : nil)
       end
     end
 
@@ -79,6 +78,30 @@ module Crossyglot
     # @returns [Fixnum]
     def word_count
       cells.inject(0) { |a, c| a + (c.across? ? 1 : 0) + (c.down? ? 1 : 0) }
+    end
+
+    protected
+
+    # Calculate and update #across_length and #down_length for each cell. Should be called by all
+    # subclasses after setting of #cells is complete.
+    def update_word_lengths!
+      each_cell do |cell, x, y|
+        cell.across_length = cell.across? ? word_length(x, y, 1, 0) : nil
+        cell.down_length = cell.down? ? word_length(x, y, 0, 1) : nil
+      end
+    end
+
+    private
+
+    # Internal word length calculation. Assumes the cell at x, y should be counted.
+    def word_length(x, y, xstep, ystep)
+      n = 0
+      begin
+        n += 1
+        x, y = [x + xstep, y + ystep]
+        cell = cell_at(x, y)
+      end  until !cell || cell.black?
+      n
     end
   end
 end

@@ -146,6 +146,8 @@ module Crossyglot
 
         validate_checksums  if options[:strict]
 
+        update_word_lengths!
+
         self
       end
 

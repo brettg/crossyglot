@@ -4,7 +4,9 @@ module Crossyglot
     NON_REBUS_CHARS = ('A'..'Z').to_a + ('a'..'z').to_a + ('0'..'9').to_a
 
     attr_accessor :number, :solution, :fill
-    attr_accessor :across_clue, :down_clue, :is_incorrect, :is_black, :is_circled,
+    attr_accessor :across_clue, :down_clue,
+                  :down_length, :across_length,
+                  :is_incorrect, :is_black, :is_circled,
                   :was_previously_incorrect, :was_revealed
 
     # Returns a new Cell with is_black set to true

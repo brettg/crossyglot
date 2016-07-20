@@ -169,12 +169,23 @@ describe Formats::Jpz do
         end
       end
 
-      xcontext 'the <word> nodes' do
+      context 'the <word> nodes' do
         subject do
           super().css('ns|rectangular-puzzle ns|word', ns: Formats::Jpz::PUZZLE_NAMESPACE)
         end
         it 'has one for each clue' do
           expect(subject.count).to eql(jpz.word_count)
+        end
+
+        context 'an across <word> node' do
+          subject { super().at('[id="7"]') }
+          it('sets a single y') { expect(subject['y']).to eql('3') }
+          it('and a range of x') { expect(subject['x']).to eql('1-15') }
+        end
+        context 'a down <word> node' do
+          subject { super().at('[id="47"]') }
+          it('sets a range of y') { expect(subject['y']).to eql('1-6') }
+          it('and a single x') { expect(subject['x']).to eql('15') }
         end
       end
 
@@ -195,6 +206,9 @@ describe Formats::Jpz do
           it 'matches the number and clues' do
             expect(subject.at('[number="16"]').content).to eql('Valhalla honcho')
           end
+          it 'matches word numbers' do
+            expect(subject.at('[number="67"]')['word']).to eql('34')
+          end
         end
         context 'the down <clues>' do
           subject { super().detect { |clues| find_subnode(clues, 'title').to_s[/down/i] } }
@@ -204,6 +218,9 @@ describe Formats::Jpz do
           end
           it 'matches the number and clues' do
             expect(subject.at('[number="18"]').content).to eql('"Fore" site?')
+          end
+          it 'matches word numbers' do
+            expect(subject.at('[number="10"]')['word']).to eql('44')
           end
         end
       end

@@ -38,6 +38,8 @@ module Crossyglot
           parse_clues
         end
 
+        update_word_lengths!
+
         self
       end
 
@@ -45,6 +47,8 @@ module Crossyglot
       #
       # @param [IO] io
       def write_io(io)
+        update_word_lengths!
+
         builder = Nokogiri::XML::Builder.new do |xml|
           xml.send('crossword-compiler-applet', xmlns: PRIMARY_NAMESPACE) do
             xml.send('rectangular-puzzle', xmlns: PUZZLE_NAMESPACE) do
@@ -59,6 +63,7 @@ module Crossyglot
                 write_cells(xml)
               end
 
+              write_words(xml)
               write_clues(xml)
             end
           end
@@ -123,18 +128,36 @@ module Crossyglot
         end
       end
 
-      def write_clues(xml)
-        write_clue_set(xml, 'Across', acrosses)
-        write_clue_set(xml, 'Down', downs)
+      def write_words(xml)
+        id = 1
+        each_cell do |cell, x, y|
+          if cell.across?
+            xml.word(id: id, x: [x + 1, x + cell.across_length].join('-'), y: y + 1)
+            id += 1
+          end
+        end
+        each_cell do |cell, x, y|
+          if cell.down?
+            xml.word(id: id, x: x + 1, y: [y + 1, y + cell.down_length].join('-'))
+            id += 1
+          end
+        end
       end
 
-      def write_clue_set(xml, title, clues)
+      def write_clues(xml)
+        word_id = write_clue_set(xml, 'Across', acrosses)
+        write_clue_set(xml, 'Down', downs, word_id)
+      end
+
+      def write_clue_set(xml, title, clues, word_id=1)
         xml.clues(ordering: 'normal') do
           xml.title title
           clues.each do |(n, clue)|
-            xml.clue clue, number: n
+            xml.clue clue, number: n, word: word_id
+            word_id += 1
           end
         end
+        word_id
       end
 
       def unzip_if_zip(io)

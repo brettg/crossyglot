@@ -4,10 +4,10 @@ describe Puzzle do
   let(:puzzle) { Puzzle.new }
 
   describe '#cells' do
-    it 'should default to an empty array' do
+    it 'defaults to an empty array' do
       puzzle.cells.should == []
     end
-    it 'should keep additions around' do
+    it 'keeps additions around' do
       c = Cell.new
       puzzle.cells << c
       puzzle.cells.should == [c]
@@ -25,11 +25,14 @@ describe Puzzle do
   end
 
   describe '#cell_at' do
-    before do
-      puzzle.width = 5
-      puzzle.height = 6
-      puzzle.cells.concat (1..30).map {Cell.new}
+    let(:puzzle) do
+      super().tap do |p|
+        p.width = 5
+        p.height = 6
+        p.cells.concat (1..30).map { Cell.new }
+      end
     end
+
     it 'should return nil if x is out of bounds' do
       puzzle.cell_at(5, 0).should == nil
       puzzle.cell_at(-1, 0).should == nil
@@ -83,8 +86,8 @@ describe Puzzle do
     #
     clues = ad_puzzle_clues.dup
     [[1, true, true], [2, false, true], false,            [3, true, true],
-      [4, true],       [],               [5, false, true], [],
-      [6, true],       false,            [7, true],        []].map do |cell_init|
+     [4, true],       [],               [5, false, true], [],
+     [6, true],       false,            [7, true],        []].map do |cell_init|
       if cell_init
         num, across, down = cell_init
         Cell.new('A',
@@ -96,7 +99,13 @@ describe Puzzle do
       end
     end
   end
-  let(:ad_puzzle) { Puzzle.new.tap { |p| p.cells.concat ad_puzzle_cells } }
+  let(:ad_puzzle) do
+    Puzzle.new.tap do |p|
+      p.cells.concat ad_puzzle_cells
+      p.width = 4
+      p.height = 3
+    end
+  end
 
   describe '#acrosses' do
     subject { puzzle.acrosses }
@@ -142,6 +151,32 @@ describe Puzzle do
     context 'for a puzzle with clues' do
       let(:puzzle) { ad_puzzle }
       it('is the number of clues') { expect(subject).to eql(ad_puzzle_clues.size) }
+    end
+  end
+
+  describe '#update_word_lengths!' do
+    let(:puzzle) { ad_puzzle }
+    before { puzzle.send(:update_word_lengths!) }
+
+    context 'for cells without words' do
+      let(:cell) { puzzle.cell_at(1, 1) }
+      it('has nil for #across_length') { expect(cell.across_length).to be_nil }
+      it('has nil for #down_length') { expect(cell.down_length).to be_nil }
+    end
+    context 'for a cell with a down word' do
+      let(:cell) { puzzle.cell_at(2, 1) }
+      it('has nil for #across_length') { expect(cell.across_length).to be_nil }
+      it('has #down_length set') { expect(cell.down_length).to eql(2) }
+    end
+    context 'for a cell with an across word' do
+      let(:cell) { puzzle.cell_at(0, 1) }
+      it('has #across_length set') { expect(cell.across_length).to eql(4) }
+      it('has nil for #down_length') { expect(cell.down_length).to be_nil }
+    end
+    context 'for a cell with an across and down word' do
+      let(:cell) { puzzle.cell_at(0, 0) }
+      it('has #across_length set') { expect(cell.across_length).to eql(2) }
+      it('has #down_length set') { expect(cell.down_length).to eql(3) }
     end
   end
 end
