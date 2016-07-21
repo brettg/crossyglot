@@ -179,4 +179,58 @@ describe Puzzle do
       it('has #down_length set') { expect(cell.down_length).to eql(3) }
     end
   end
+
+  describe '#eql?' do
+    let(:puzzle_a) { Puzzle.new }
+    let(:puzzle_b) { Puzzle.new }
+    subject { puzzle_a.eql?(puzzle_b) }
+
+    context 'for empty puzzles' do
+      it { is_expected.to be_truthy }
+    end
+    context 'for puzzles with matching attributes' do
+      let(:puzzle_a) do
+        Puzzle.new.tap do |p|
+          p.author = 'Catfish'
+          p.height = p.width = 10
+        end
+      end
+      let(:puzzle_b) do
+        Puzzle.new.tap do |p|
+          p.author = 'Catfish'
+          p.height = p.width = 10
+        end
+      end
+      it { is_expected.to be_truthy }
+    end
+    context 'for puzzles with mismatched attributes' do
+      let(:puzzle_a) do
+        Puzzle.new.tap { |p| p.notes = 'Carl' }
+      end
+      it { is_expected.to be_falsy }
+    end
+    context 'for puzzles with matching cells' do
+      let(:puzzle_a) do
+        Puzzle.new.tap do |p|
+          p.cells << Cell.new.tap { |c| c.number = 5 }
+        end
+      end
+      let(:puzzle_b) do
+        Puzzle.new.tap do |p|
+          p.cells << Cell.new.tap { |c| c.number = 5 }
+        end
+      end
+      it { is_expected.to be_truthy }
+    end
+    context 'for puzzles with different numbers of cells (the first of which match)' do
+      let(:puzzle_a) { Puzzle.new.tap { |p| 10.times { p.cells << Cell.new } } }
+      let(:puzzle_b) { Puzzle.new.tap { |p| 11.times { p.cells << Cell.new } } }
+      it { is_expected.to be_falsy }
+    end
+    context 'for puzzles with mismatched cells' do
+      let(:puzzle_a) { Puzzle.new.tap { |p| p.cells << Cell.new.tap { |c| c.solution = 'a' } } }
+      let(:puzzle_b) { Puzzle.new.tap { |p| p.cells << Cell.new.tap { |c| c.solution = 'b' } } }
+      it { is_expected.to be_falsy }
+    end
+  end
 end

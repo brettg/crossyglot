@@ -105,4 +105,24 @@ describe Cell do
       c.should_not be_down
     end
   end
+
+  describe '#eql?' do
+    let(:cell_a) { Cell.new }
+    let(:cell_b) { Cell.new }
+
+    subject { cell_a.eql?(cell_b) }
+
+    context 'for empty cells' do
+      it { is_expected.to be_truthy }
+    end
+    context 'for cells with matching attributes' do
+      let(:cell_a) { Cell.new.tap { |c| c.fill = 'c' } }
+      let(:cell_b) { Cell.new.tap { |c| c.fill = 'c' } }
+      it { is_expected.to be_truthy }
+    end
+    context 'for cells with mismatched attributes' do
+      let(:cell_a) { Cell.new.tap { |c| c.down_length = 3 } }
+      it { is_expected.to be_falsy }
+    end
+  end
 end

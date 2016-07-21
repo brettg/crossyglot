@@ -80,7 +80,24 @@ module Crossyglot
       cells.inject(0) { |a, c| a + (c.across? ? 1 : 0) + (c.down? ? 1 : 0) }
     end
 
+    def eql?(other)
+      attrs_eql?(other) && cells_eql?(other)
+    end
+
     protected
+
+    def attrs_eql?(other)
+      %i{
+        author copyright notes title description height width timer_at is_timer_running
+        is_diagramless
+      }.all? do |attr|
+        public_send(attr).eql?(other.public_send(attr))
+      end
+    end
+
+    def cells_eql?(other)
+      cells.size == other.cells.size && cells.zip(other.cells).all? { |c1, c2| c1.eql?(c2) }
+    end
 
     # Calculate and update #across_length and #down_length for each cell. Should be called by all
     # subclasses after setting of #cells is complete.

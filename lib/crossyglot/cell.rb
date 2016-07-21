@@ -42,6 +42,16 @@ module Crossyglot
       rebus_value?(fill)
     end
 
+    def eql?(other)
+      %i{number solution fill
+         across_clue down_clue
+         down_length across_length
+         is_incorrect is_black is_circled
+         was_previously_incorrect was_revealed}.all? do |attr|
+        public_send(attr).eql?(other.public_send(attr))
+      end
+    end
+
     private
 
     def rebus_value?(v)
