@@ -35,7 +35,7 @@ module TestfileHelper
   end
 end
 
-module Roundtripper
+module RoundTripper
   ROUNDTRIP_INVALID_FILE = File.expand_path('~/.crossyglot/roundtrip-invalids')
   ROUNDTRIP_INVALIDS = if File.exists?(ROUNDTRIP_INVALID_FILE)
     File.read(ROUNDTRIP_INVALID_FILE).split("\n").map!(&:strip)
@@ -43,58 +43,65 @@ module Roundtripper
     []
   end
 
+  class RoundTripMatcher
+    attr_reader :expected, :actual
 
-  def should_roundtrip_puz_file(path, ignore_known_invalids=false, save_output=false)
-    File.open(path, 'rb:ASCII-8BIT') do |puzfile|
-      puz = Formats::Puz.new.parse(puzfile, {strict: true})
+    def matches?(puz_path)
+      @path = puz_path
 
-      sio = StringIO.new(''.b, 'wb')
-      puz.write(sio)
-      out = sio.string
+      File.open(@path, 'rb:ASCII-8BIT') do |puzfile|
+        puz = Formats::Puz.new.parse(puzfile, {strict: true})
 
-      if save_output
-        File.open(tmp_output_path(File.basename(path)), 'wb') {|out_f| out_f << out}
+        sio = StringIO.new(''.b, 'wb')
+        puz.write(sio)
+        @actual = sio.string
+
+        puzfile.rewind
+        @expected = puzfile.read
       end
 
-      puzfile.rewind
-      input = puzfile.read
-
-      if ENV['DEBUG'] && input != out
-        puts
-        0.upto(input.size) do |n|
-          if input[n] == out[n]
-            print green(input[n].inspect[1..-2])
-          else
-            puts red(input[n].inspect[1..-2])
-            puts "Mismatch at offset: %d  Input:%d Output:%d" % [n, input.getbyte(n), out.getbyte(n)]
-            break
-          end
-        end
+      if ENV['CROSSYGLOT_SAVE_ROUNDTRIP'] && !mismatch_offset
+        File.open(tmp_output_path(File.basename(@path)), 'wb') { |out_f| out_f << out }
       end
 
-      out.should == input
+      !mismatch_offset
     end
+
+    def failure_message
+      "Roundtrip mismatch at offset: #{mismatch_offset}\nExpected:\n" +
+      color_puzzle(@expected, 33)  +
+      "\nActual:\n" +
+      color_puzzle(@actual)
+    end
+
+    def mismatch_offset
+      unless defined?(@_mismatch_offset)
+        @_mismatch_offset ||= (0...@expected.size).detect { |n| @actual[n] != @expected[n] }
+      end
+
+      @_mismatch_offset
+    end
+
+    def color_puzzle(puzzle, mismatch_color=31)
+      offset = mismatch_offset
+      color(puzzle[0..offset].inspect[1..-2], 32) +
+      color(puzzle[(offset + 1)..-1].inspect[1..-2], mismatch_color)
+    end
+
+    def color(text, color_code)
+      "\e[#{color_code}m#{text}\e[0m"
+    end
+
   end
 
-  private
-
-  def color(text, color_code)
-    "#{color_code}#{text}\e[0m"
+  def roundtrip_successfully
+    RoundTripMatcher.new
   end
-
-  def red(text)
-    color(text, "\e[31m")
-  end
-
-  def green(text)
-    color(text, "\e[32m")
-  end
-
 end
 
 RSpec.configure do |config|
   include TestfileHelper
-  include Roundtripper
+  include RoundTripper
 
   config.expect_with(:rspec) { |c| c.syntax = [:should, :expect] }
 end

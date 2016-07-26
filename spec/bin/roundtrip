@@ -10,18 +10,21 @@ end
 
 require File.expand_path('../../spec_helper', __FILE__)
 
-describe 'Roundtrip tests' do
+# Mild Abuse of the RSpec API, but it works pretty well.
+describe '.puz' do
   ARGV.each do |f|
     if File.exists?(f)
-      if Roundtripper::ROUNDTRIP_INVALIDS.include?(f)
-        xit "is known invalid #{f}"
+      if RoundTripper::ROUNDTRIP_INVALIDS.include?(f)
+        xit "is a known invalid #{f}"
       else
-        it "should roundtrip #{f}" do
-          should_roundtrip_puz_file(f, true, ENV['CROSSYGLOT_SAVE'])
+        if File.size(f) > 0
+          it("roundtrips #{f}") { expect(f).to roundtrip_successfully }
+        else
+          xit "is empty #{f}"
         end
       end
     else
-      puts "File #{f} not found"
+      xit "does not exist #{f}"
     end
   end
 end

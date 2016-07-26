@@ -636,12 +636,10 @@ describe Formats::Puz do
 
   # Testing via round tripping seems like the easiest and most complete way to exercise all the
   # writing logic.
-  describe 'should correctly roundtrip' do
+  describe 'correctly roundtrips' do
     %w{vanilla partially-filled rebus unchecked circles other-extras-order
        user-rebus diagramless numeric-rebus v1.4-with-notes}.each do |fn|
-      it "#{fn}.puz" do
-        should_roundtrip_puz_file testfile_path("#{fn}.puz")
-      end
+      it("#{fn}.puz") { expect(testfile_path("#{fn}.puz")).to roundtrip_successfully }
     end
   end
 end

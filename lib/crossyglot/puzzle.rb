@@ -84,7 +84,16 @@ module Crossyglot
       attrs_eql?(other) && cells_eql?(other)
     end
 
-    protected
+    private
+
+    # Calculate and update #across_length and #down_length for each cell. Should be called by all
+    # subclasses after setting of #cells is complete.
+    def update_word_lengths!
+      each_cell do |cell, x, y|
+        cell.across_length = cell.across? ? word_length(x, y, 1, 0) : nil
+        cell.down_length = cell.down? ? word_length(x, y, 0, 1) : nil
+      end
+    end
 
     def attrs_eql?(other)
       %i{
@@ -98,17 +107,6 @@ module Crossyglot
     def cells_eql?(other)
       cells.size == other.cells.size && cells.zip(other.cells).all? { |c1, c2| c1.eql?(c2) }
     end
-
-    # Calculate and update #across_length and #down_length for each cell. Should be called by all
-    # subclasses after setting of #cells is complete.
-    def update_word_lengths!
-      each_cell do |cell, x, y|
-        cell.across_length = cell.across? ? word_length(x, y, 1, 0) : nil
-        cell.down_length = cell.down? ? word_length(x, y, 0, 1) : nil
-      end
-    end
-
-    private
 
     # Internal word length calculation. Assumes the cell at x, y should be counted.
     def word_length(x, y, xstep, ystep)
