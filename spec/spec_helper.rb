@@ -43,7 +43,7 @@ module RoundTripper
     []
   end
 
-  class RoundTripMatcher
+  class Matcher
     attr_reader :expected, :actual
 
     def matches?(puz_path)
@@ -58,10 +58,6 @@ module RoundTripper
 
         puzfile.rewind
         @expected = puzfile.read
-      end
-
-      if ENV['CROSSYGLOT_SAVE_ROUNDTRIP'] && !mismatch_offset
-        File.open(tmp_output_path(File.basename(@path)), 'wb') { |out_f| out_f << out }
       end
 
       !mismatch_offset
@@ -83,9 +79,8 @@ module RoundTripper
     end
 
     def color_puzzle(puzzle, mismatch_color=31)
-      offset = mismatch_offset
-      color(puzzle[0..offset].inspect[1..-2], 32) +
-      color(puzzle[(offset + 1)..-1].inspect[1..-2], mismatch_color)
+      o = mismatch_offset
+      puzzle[0..o].inspect[1..-2] + color(puzzle[(o + 1)..-1].inspect[1..-2], mismatch_color)
     end
 
     def color(text, color_code)
@@ -95,7 +90,7 @@ module RoundTripper
   end
 
   def roundtrip_successfully
-    RoundTripMatcher.new
+    RoundTripper::Matcher.new
   end
 end
 
