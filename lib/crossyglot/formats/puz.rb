@@ -201,8 +201,8 @@ module Crossyglot
       end
 
       def parse_solution(puzfile)
-        solution = puzfile.read(width * height)
-        fill = puzfile.read(width * height)
+        solution = decode_parsed(puzfile.read(width * height))
+        fill = decode_parsed(puzfile.read(width * height))
 
         cells.clear
 
@@ -214,7 +214,6 @@ module Crossyglot
             PuzCell.new(sol, fill: fl == ?- ? nil : fl)
           end
         end
-
       end
 
       def parse_strings_sections(puzfile)
@@ -331,7 +330,10 @@ module Crossyglot
 
       # Next \0 delimited string from file, nil if of empty length
       def next_string(puzfile)
-        s = puzfile.gets(?\0).chomp(?\0)
+        decode_parsed(puzfile.gets(?\0).chomp(?\0))
+      end
+
+      def decode_parsed(s)
         s.empty? ? nil : s.force_encoding(STRINGS_SECTION_ENCODING).encode('UTF-8')
       end
 
@@ -383,24 +385,27 @@ module Crossyglot
       end
 
       def solution_data
-        cells.map do |c|
+        data = cells.map do |c|
           if c.black?
             black_cell_char
-          else 
+          else
             (c.respond_to?(:puz_grid_solution) && c.puz_grid_solution) || c.solution[0]
           end
-        end.join
+        end
+        encode_string_data(data.join)
       end
 
       def fill_data
-        cells.map do |c|
+        data = cells.map do |c|
           if c.black?
             black_cell_char
           else
             (c.respond_to?(:puz_grid_fill) && c.puz_grid_fill) || (c.fill && c.fill[0]) || ?-
           end
-        end.join
+        end
+        encode_string_data(data.join)
       end
+
 
       def black_cell_char
         diagramless? ? ?: : ?.
@@ -517,8 +522,12 @@ module Crossyglot
       end
 
       def puzzle_cksum
-        data = [solution_data, fill_data, strings_section_for_cksum, encoded_clues.join,
-                notes_for_cksum].join
+        data = [
+          solution_data,
+          fill_data,
+          strings_section_for_cksum,
+          encoded_clues.join,
+          notes_for_cksum].join
         checksum data, header_cksum
       end
 

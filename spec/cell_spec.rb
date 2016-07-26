@@ -55,15 +55,14 @@ describe Cell do
   end
 
   describe '#rebus?' do
-    it 'should be true if the solution\'s length is > 1' do
-      Cell.new.should_not be_rebus
-      Cell.new('A').should_not be_rebus
-      Cell.new('5').should_not be_rebus
-      Cell.new('AB').should be_rebus
+    it 'is true if the solution\'s length is > 1' do
+      expect(Cell.new).not_to be_rebus
+      expect(Cell.new('A')).not_to be_rebus
+      expect(Cell.new('5')).not_to be_rebus
+      expect(Cell.new('AB')).to be_rebus
     end
-    it 'should be true if the solution is not an alphanumeric' do
-      Cell.new('%').should be_rebus
-      Cell.new('#').should be_rebus
+    it 'is not true for non-ascii single characters' do
+      expect(Cell.new('ñ')).not_to be_rebus
     end
   end
   describe '#rebus_fill?' do
@@ -74,10 +73,6 @@ describe Cell do
       Cell.new('A', fill: '3').should_not be_rebus_fill
       Cell.new('A', fill: 'AB').should be_rebus_fill
       Cell.new('AB', fill: 'AB').should be_rebus_fill
-    end
-    it 'should be true if the fill is not an alphanumeric' do
-      Cell.new('A', fill: ';').should be_rebus_fill
-      Cell.new('A', fill: '+').should be_rebus_fill
     end
   end
 

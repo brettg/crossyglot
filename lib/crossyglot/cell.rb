@@ -54,8 +54,11 @@ module Crossyglot
 
     private
 
+    # This appears to be inconsistent. Puzzles with single character ISO-8859-1 cells can be treated
+    # as non-rebus, but fill of the same type will often cause the fill section to be saved as
+    # rebus.
     def rebus_value?(v)
-      v && !NON_REBUS_CHARS.include?(v)
+      v && v.size > 1
     end
   end
 end
