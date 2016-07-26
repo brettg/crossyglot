@@ -65,9 +65,16 @@ module Crossyglot
 
       STRINGS_SECTION_ENCODING = 'ISO-8859-1'
 
+      # GEXT - flags
+      # LTIM - timer
+      # GRBS - grid with rebus placeholders
+      # RTBL - map of rebus placeholders to values
+      # RUSR - grid with user rebus values separated by null characters
       EXTRA_SECTIONS = %w{GEXT LTIM GRBS RTBL RUSR}
       EXTRA_HEADER_FORMAT = 'a4vv'
       EXTRA_HEADER_LENGTH = 8
+
+      ENCODED_EXTRA_SECTIONS = %w{RTBL RUSR}
 
       # Map of attributes on Cell to mask bit to check against value for cell in GEXT extra section
       GEXT_MASKS = {is_incorrect: 0x20, was_previously_incorrect: 0x10,
@@ -233,8 +240,10 @@ module Crossyglot
         @original_extras_order = []
         while header = puzfile.read(EXTRA_HEADER_LENGTH)
           if header.size == EXTRA_HEADER_LENGTH
-            title, length, cksum = header.unpack(EXTRA_HEADER_FORMAT)
+            # Ignore the checksum
+            title, length, _ = header.unpack(EXTRA_HEADER_FORMAT)
             body = puzfile.read(length + 1).chomp(?\0)
+            body = decode_parsed(body)  if ENCODED_EXTRA_SECTIONS.include?(title)
 
             meth = "parse_#{title.downcase}_section"
             send(meth, body)  if respond_to?(meth, true)
@@ -495,7 +504,8 @@ module Crossyglot
 
       # Put the title, body and size into the correct format
       def extras_section_data(title, body)
-        [title, body.size, checksum(body)].pack(EXTRA_HEADER_FORMAT) + body + ?\0
+        body = encode_string_data(body)  if ENCODED_EXTRA_SECTIONS.include?(title)
+        [title, body.size, checksum(body), body].pack(EXTRA_HEADER_FORMAT + 'a*') + ?\0
       end
 
       #---------------------------------------

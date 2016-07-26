@@ -499,10 +499,10 @@ describe Formats::Puz do
       end
       describe 'with string set to true' do
         %w{header puzzle icheated}.each do |cksum|
-          it "should raise an error if the #{cksum} checksum is invalid" do
+          it "raises an error if the #{cksum} checksum is invalid" do
             lambda do
-              puzzle = Formats::Puz.new.parse(testfile_path("invalid-cksum/bad-#{cksum}-cksum.puz"),
-                                              {strict: true})
+              Formats::Puz.new.parse(testfile_path("invalid-cksum/bad-#{cksum}-cksum.puz"),
+                                     {strict: true})
             end.should raise_error(Formats::Puz::InvalidChecksumError)
           end
         end
@@ -638,7 +638,8 @@ describe Formats::Puz do
   # writing logic.
   describe 'correctly roundtrips' do
     %w{vanilla partially-filled rebus unchecked circles other-extras-order
-       user-rebus diagramless numeric-rebus v1.4-with-notes}.each do |fn|
+       user-rebus diagramless numeric-rebus v1.4-with-notes
+       non-ascii-rebus-fill}.each do |fn|
       it("#{fn}.puz") { expect(testfile_path("#{fn}.puz")).to roundtrip_successfully }
     end
   end
