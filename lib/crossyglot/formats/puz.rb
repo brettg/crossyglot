@@ -568,4 +568,6 @@ module Crossyglot
       end
     end
   end
+
+  Puzzle::FORMAT_EXTENSIONS['puz'] = Formats::Puz
 end

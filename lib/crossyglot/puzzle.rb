@@ -2,6 +2,9 @@ module Crossyglot
   # The base puzzle object containing puzzle data and common functionality. Subclasses are needed
   # for parsing and writing out specific file types.
   class Puzzle
+    # For format classes to register themselves.
+    FORMAT_EXTENSIONS = {}
+
     attr_accessor :author, :copyright, :notes, :title, :description
     attr_accessor :height, :width
     attr_accessor :timer_at, :is_timer_running
@@ -9,6 +12,20 @@ module Crossyglot
 
     def timer_running?; !!is_timer_running end
     def diagramless?; !!is_diagramless end
+
+    # Parse the given puzzle determining type by file extension.
+    #
+    # @param [String] path The path of the puzzle to parse. Extension must be one of:
+    #                      .puz .jpz
+    # @returns [Puzzle]
+    def self.parse_file(path)
+      ext = path && File.extname(path)
+      if ext && clazz = FORMAT_EXTENSIONS[ext.sub(/\A\./, '')]
+        clazz.new.parse_file(path)
+      else
+        raise Crossyglot::InvalidExtensionError.new("Unknown puzzle extension: #{ext}")
+      end
+    end
 
     # Parse the given puzzle. Passes to parse_file or parse_io method of subclass.
     #

@@ -171,4 +171,6 @@ module Crossyglot
       end
     end
   end
+
+  Puzzle::FORMAT_EXTENSIONS['jpz'] = Formats::Jpz
 end

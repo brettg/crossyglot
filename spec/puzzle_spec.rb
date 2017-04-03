@@ -3,6 +3,38 @@ require 'spec_helper'
 describe Puzzle do
   let(:puzzle) { Puzzle.new }
 
+  describe '#parse_file' do
+    let(:path) { }
+    let(:puzzle) { Puzzle.parse_file(path) }
+    subject { puzzle }
+
+    context 'for nil' do
+      it 'raises an unknown extension error' do
+        expect { subject }.to raise_exception(Crossyglot::InvalidExtensionError)
+      end
+    end
+    context 'for .puz file' do
+      let(:path) { testfile_path('vanilla.puz') }
+      it('returns a Formats::Puz file') { is_expected.to be_kind_of(Formats::Puz) }
+    end
+    context 'for .jpz file' do
+      let(:path) { testfile_path('basic-zipped.jpz') }
+      it('returns a Formats::Jpz file') { is_expected.to be_kind_of(Formats::Jpz) }
+    end
+    context 'for an unknown file extension' do
+      let(:path) { testfile_path('puzzle.cats') }
+      it 'raises an unknown extension error' do
+        expect { subject }.to raise_exception(Crossyglot::InvalidExtensionError)
+      end
+    end
+    context 'for a file that does not exist' do
+      let(:path) { testfile_path('cats.puz') }
+      it 'raises an no such file error' do
+        expect { subject }.to raise_exception(Errno::ENOENT)
+      end
+    end
+  end
+
   describe '#cells' do
     it 'defaults to an empty array' do
       puzzle.cells.should == []

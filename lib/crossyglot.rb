@@ -1,8 +1,9 @@
 require 'crossyglot/version'
 
 module Crossyglot
-  class InvalidPuzzleError < StandardError
-  end
+  class Error < StandardError; end
+  class InvalidPuzzleError < Error; end
+  class InvalidExtensionError < Error; end
 end
 
 require 'crossyglot/cell'
