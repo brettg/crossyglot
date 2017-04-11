@@ -4,7 +4,7 @@
 
 if ARGV.size < 2
   puts 'Multiple Puzzle file(s) required!'
-  puts 'Usage: compare puzfile.puz puzfile.jpz'
+  puts 'Usage: xword_compare puzfile.puz puzfile.jpz'
   puts 'exiting...'
   exit
 end

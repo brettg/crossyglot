@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+# Script to compare known same puzzles of different formats to check both are
+# parsed to the same value.
+
+if ARGV.size != 2
+  puts 'Usage: xword_convert in.{puz,jpz} out.{jpz,puz}'
+  puts 'exiting...'
+  exit
+end
+
+require File.expand_path('../../spec_helper', __FILE__)
+require File.expand_path('../../spec_cli', __FILE__)
+
+include Crossyglot::SpecCLIHelpers
+
+infile = ARGV[0]
+outfile = ARGV[1]
+
+Crossyglot::Puzzle.parse_file(infile)
+                  .convert_to(File.extname(outfile).sub(/\A\./, ''))
+                  .write(outfile)

@@ -61,7 +61,7 @@ module SamePuzzle
       if defined?(@cell_length_correct)
         if @cell_length_correct
           "Mismatched cells:" +
-          @mismatched_cells.map { |(idx, m_attrs)| "\n\t#{idx} - #{m_attrs.join(', ')}" }
+          @mismatched_cells.map { |(idx, m_attrs)| "\n\t#{idx} - #{m_attrs.join(', ')}" }.join
         else
           "Cell array length does not match. Expected #{@expected.cells.size}, " +
           "got #{@actual.cells.size}"
@@ -100,8 +100,8 @@ module SamePuzzle
             m_attrs = %i{number solution fill
                          across_clue down_clue
                          down_length across_length
-                         is_incorrect is_black is_circled
-                         was_previously_incorrect was_revealed}.select do |attr|
+                         incorrect? black? circled?
+                         previously_incorrect? revealed?}.select do |attr|
                            c1.public_send(attr) != c2.public_send(attr)
                          end
             [idx, m_attrs] unless m_attrs.empty?
