@@ -195,7 +195,6 @@ describe Formats::Jpz do
         subject { super().css('ns|clues', ns: Formats::Jpz::PUZZLE_NAMESPACE) }
 
         it('has two') do
-          puts subject.map { |s| s.at('title') }.inspect
           expect(subject.count).to eql(2)
         end
 

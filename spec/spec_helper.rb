@@ -82,7 +82,8 @@ module SamePuzzle
         @mismatched_attrs = %i{
           author copyright notes title description
           height width
-          timer_at is_timer_running
+          timer_at
+          timer_running? diagramless?
         }.select do |attr|
           !@expected.public_send(attr).eql?(@actual.public_send(attr))
         end

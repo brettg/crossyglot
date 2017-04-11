@@ -19,7 +19,7 @@ module Crossyglot
       self.solution = solution
       attribs.each do |k, v|
         if respond_to?(setter = "#{k}=")
-          send(setter, v)
+          public_send(setter, v)
         end
       end
     end
@@ -46,8 +46,8 @@ module Crossyglot
       %i{number solution fill
          across_clue down_clue
          down_length across_length
-         is_incorrect is_black is_circled
-         was_previously_incorrect was_revealed}.all? do |attr|
+         incorrect? black? circled?
+         previously_incorrect? revealed?}.all? do |attr|
         public_send(attr).eql?(other.public_send(attr))
       end
     end

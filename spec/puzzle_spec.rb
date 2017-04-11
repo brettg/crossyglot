@@ -212,6 +212,43 @@ describe Puzzle do
     end
   end
 
+  describe '#convert_to' do
+    let(:path) { testfile_path('vanilla.puz') }
+    let(:puzzle) { Puzzle.parse_file(path) }
+    let(:format) { }
+
+    subject { puzzle.convert_to(format) }
+
+    context 'when format is null' do
+      it 'raises an InvalidPuzzleFormat error' do
+        expect { subject }.to raise_exception(Crossyglot::InvalidPuzzleFormat)
+      end
+    end
+    context 'for an unknown format' do
+      it 'raises an InvalidPuzzleFormat error' do
+        expect { subject }.to raise_exception(Crossyglot::InvalidPuzzleFormat)
+      end
+    end
+    context 'for an extension format' do
+      let(:format) { 'jpz' }
+      it 'converts to an equivalent puzzle of that format' do
+        is_expected.to be_kind_of(Crossyglot::Formats::Jpz)
+        is_expected.to be_same_puzzle(puzzle)
+      end
+    end
+    context 'for a format class' do
+      let(:format) { Crossyglot::Formats::Jpz }
+      it 'converts to an equivalent puzzle of that format' do
+        is_expected.to be_kind_of(Crossyglot::Formats::Jpz)
+        is_expected.to be_same_puzzle(puzzle)
+      end
+    end
+    context 'for the same format as the current class' do
+      let(:format) { 'puz' }
+      it('returns the same object') { is_expected.to equal(puzzle) }
+    end
+  end
+
   describe '#eql?' do
     let(:puzzle_a) { Puzzle.new }
     let(:puzzle_b) { Puzzle.new }

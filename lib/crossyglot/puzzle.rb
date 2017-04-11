@@ -5,10 +5,11 @@ module Crossyglot
     # For format classes to register themselves.
     FORMAT_EXTENSIONS = {}
 
-    attr_accessor :author, :copyright, :notes, :title, :description,
-                  :height, :width,
-                  :timer_at, :is_timer_running,
-                  :is_diagramless
+    ATTRIBUTES = :author, :copyright, :notes, :title, :description,
+                 :height, :width,
+                 :timer_at, :is_timer_running,
+                 :is_diagramless
+    attr_accessor(*ATTRIBUTES)
 
     def timer_running?; !!is_timer_running end
     def diagramless?; !!is_diagramless end
@@ -34,7 +35,7 @@ module Crossyglot
     # @param [Hash] strict Options to pass to parse_io or parse_file method (see subclasses)
     # @returns [Puzzle] self
     def parse(path_or_io, options={})
-      send(path_or_io.is_a?(String) ? :parse_file : :parse_io, path_or_io, options)
+      public_send(path_or_io.is_a?(String) ? :parse_file : :parse_io, path_or_io, options)
       self
     end
 
@@ -42,7 +43,7 @@ module Crossyglot
     #
     # @param [String, IO] path_or_io The path on disk to be written or an IO object to write to
     def write(path_or_io)
-      send(path_or_io.is_a?(String) ? :write_file : :write_io, path_or_io)
+      public_send(path_or_io.is_a?(String) ? :write_file : :write_io, path_or_io)
     end
 
     # The array of cell objects which correspond to squares (black or white) in the puzzle grid.
@@ -97,6 +98,27 @@ module Crossyglot
       cells.inject(0) { |a, c| a + (c.across? ? 1 : 0) + (c.down? ? 1 : 0) }
     end
 
+    # Convert to a different format subclass.
+    #
+    # @param [Class, string] The class name of file extension of the format to conver to.
+    # @returns [Puzzle] A new puzzle object of the appropriate class, or this puzzle object if the
+    #                   class is the same. Raises an InvalidPuzzleFormat if given something bogus.
+    def convert_to(format)
+      clazz = FORMAT_EXTENSIONS[format.to_s] || format
+      raise InvalidPuzzleFormat.new  unless FORMAT_EXTENSIONS.values.include?(clazz)
+
+      if kind_of?(clazz)
+        self
+      else
+        new_puzzle = clazz.new
+        ATTRIBUTES.each do |attr|
+          new_puzzle.public_send("#{attr}=", public_send(attr))
+        end
+        new_puzzle.cells.concat(cells.map(&:clone))
+        new_puzzle
+      end
+    end
+
     def eql?(other)
       attrs_eql?(other) && cells_eql?(other)
     end
@@ -114,8 +136,8 @@ module Crossyglot
 
     def attrs_eql?(other)
       %i{
-        author copyright notes title description height width timer_at is_timer_running
-        is_diagramless
+        author copyright notes title description height width timer_at
+        timer_running?  diagramless?
       }.all? do |attr|
         public_send(attr).eql?(other.public_send(attr))
       end

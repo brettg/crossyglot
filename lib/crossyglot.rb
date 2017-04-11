@@ -3,6 +3,7 @@ require 'crossyglot/version'
 module Crossyglot
   class Error < StandardError; end
   class InvalidPuzzleError < Error; end
+  class InvalidPuzzleFormat < Error; end
   class InvalidExtensionError < Error; end
 end
 
