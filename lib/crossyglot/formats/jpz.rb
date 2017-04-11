@@ -4,6 +4,8 @@ require 'archive/zip'
 module Crossyglot
   module Formats
     class Jpz < Puzzle
+      class NoRootJpzNode < InvalidPuzzleError; end;
+
       PRIMARY_NAMESPACE = 'http://crossword.info/xml/crossword-compiler'
       PUZZLE_NAMESPACE = 'http://crossword.info/xml/rectangular-puzzle'
 
@@ -26,16 +28,20 @@ module Crossyglot
       # @returns self
       def parse_io(puzfile, options={})
         unzip_if_zip(puzfile) do |unzipped_puzfile|
-          @xml = Nokogiri::XML(unzipped_puzfile.read) {|config| config.noblanks}
+          @xml = Nokogiri::XML(unzipped_puzfile.read) { |c| c.noblanks }
           @xml.remove_namespaces!
           @xml = @xml.at('rectangular-puzzle')
 
-          @cword_elem = @xml.at('crossword')
-          @grid_elem = @cword_elem.at('grid')
+          raise NoRootJpzNode.new("Invalid .jpz XML, no root node found")  unless @xml
 
-          parse_metadata
-          parse_cells
-          parse_clues
+          if @xml
+            @cword_elem = @xml.at('crossword')
+            @grid_elem = @cword_elem.at('grid')
+
+            parse_metadata
+            parse_cells
+            parse_clues
+          end
         end
 
         update_word_lengths!
@@ -53,18 +59,20 @@ module Crossyglot
           xml.send('crossword-compiler-applet', xmlns: PRIMARY_NAMESPACE) do
             xml.send('rectangular-puzzle', xmlns: PUZZLE_NAMESPACE) do
               xml.metadata do
-                xml.creator author
-                xml.title title
-                xml.copyright copyright
+                xml.creator author  if author
+                xml.title title  if title
+                xml.copyright copyright  if copyright
                 xml.description description  if description
               end
 
-              xml.grid(height: height, width: width) do
-                write_cells(xml)
-              end
+              xml.crossword do
+                xml.grid(height: height, width: width) do
+                  write_cells(xml)
+                end
 
-              write_words(xml)
-              write_clues(xml)
+                write_words(xml)
+                write_clues(xml)
+              end
             end
           end
         end
@@ -81,10 +89,14 @@ module Crossyglot
 
       private
 
+      def text_at(elem, root=@xml)
+        @xml.at(elem) && @xml.at(elem).text
+      end
+
       def parse_metadata
-        self.title = @xml.at('title').text
-        self.author = @xml.at('creator').text
-        self.copyright = @xml.at('copyright').text
+        self.title = text_at('metadata title')
+        self.author = text_at('metadata creator')
+        self.copyright = text_at('metadata copyright')
 
         self.height = @grid_elem['height'].to_i
         self.width = @grid_elem['width'].to_i
@@ -103,10 +115,9 @@ module Crossyglot
       end
 
       def parse_clues
-        cells_by_number =  cells.inject({}) {|accum, c| accum[c.number] = c if c.number; accum}
+        cells_by_number =  cells.inject({}) { |accum, c| accum[c.number] = c if c.number; accum }
         @cword_elem.css('clues').each do |clues_elem|
           across = clues_elem.at('title').text[/across/i]
-
           clues_elem.css('clue').each do |clue_elem|
             cell = cells_by_number[clue_elem['number'].to_i]
             cell.send(across ? :across_clue= : :down_clue=, clue_elem.text)

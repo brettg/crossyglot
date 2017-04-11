@@ -3,8 +3,8 @@ module Crossyglot
   class Cell
     NON_REBUS_CHARS = ('A'..'Z').to_a + ('a'..'z').to_a + ('0'..'9').to_a
 
-    attr_accessor :number, :solution, :fill
-    attr_accessor :across_clue, :down_clue,
+    attr_accessor :number, :solution, :fill,
+                  :across_clue, :down_clue,
                   :down_length, :across_length,
                   :is_incorrect, :is_black, :is_circled,
                   :was_previously_incorrect, :was_revealed

@@ -138,11 +138,13 @@ describe Formats::Jpz do
             contains_node('copyright', Formats::Jpz::PUZZLE_NAMESPACE, :copyright)
           end
 
-          contains_node('grid', Formats::Jpz::PUZZLE_NAMESPACE) do
-            it('has a width attribute') { expect(subject['width'].to_i).to eql(jpz.width) }
-            it('has a height attribute') { expect(subject['height'].to_i).to eql(jpz.height) }
+          contains_node('crossword', Formats::Jpz::PUZZLE_NAMESPACE) do
+            contains_node('grid', Formats::Jpz::PUZZLE_NAMESPACE) do
+              it('has a width attribute') { expect(subject['width'].to_i).to eql(jpz.width) }
+              it('has a height attribute') { expect(subject['height'].to_i).to eql(jpz.height) }
 
-            contains_node('cell', Formats::Jpz::PUZZLE_NAMESPACE)
+              contains_node('cell', Formats::Jpz::PUZZLE_NAMESPACE)
+            end
           end
         end
       end

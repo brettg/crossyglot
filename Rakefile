@@ -18,5 +18,3 @@ Rake::RDocTask.new do |rd|
   rd.rdoc_files.include("lib/**/*.rb")
   rd.rdoc_dir = 'doc'
 end
-
-

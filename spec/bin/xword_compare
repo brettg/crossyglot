@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# Script to compare known same puzzles of different formats to check both are
+# parsed to the same value.
+
+if ARGV.size < 2
+  puts 'Multiple Puzzle file(s) required!'
+  puts 'Usage: compare puzfile.puz puzfile.jpz'
+  puts 'exiting...'
+  exit
+end
+
+require File.expand_path('../../spec_helper', __FILE__)
+require File.expand_path('../../spec_cli', __FILE__)
+
+include Crossyglot::SpecCLIHelpers
+
+paths = ARGV
+puzzles = ARGV.map { |p| Crossyglot::Puzzle.parse_file(p) }
+puzzles.zip(paths).combination(2) do |(puzA, pathA), (puzB, pathB)|
+  if (matcher = SamePuzzle::Matcher.new(puzA)).matches?(puzB)
+    puts green("Match for #{pathA} and #{pathB}")
+  else
+    puts red("Mismatch of #{pathA} and #{pathB}!")
+    puts red(matcher.failure_message)
+    puts
+    exit 1
+  end
+end
+puts green("All puzzles match.")

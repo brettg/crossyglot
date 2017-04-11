@@ -5,10 +5,10 @@ module Crossyglot
     # For format classes to register themselves.
     FORMAT_EXTENSIONS = {}
 
-    attr_accessor :author, :copyright, :notes, :title, :description
-    attr_accessor :height, :width
-    attr_accessor :timer_at, :is_timer_running
-    attr_accessor :is_diagramless
+    attr_accessor :author, :copyright, :notes, :title, :description,
+                  :height, :width,
+                  :timer_at, :is_timer_running,
+                  :is_diagramless
 
     def timer_running?; !!is_timer_running end
     def diagramless?; !!is_diagramless end

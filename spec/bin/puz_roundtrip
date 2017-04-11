@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+# Script to dynamically create specs trying to correctly roundtrip all the .puz files that get
+# passed in
+
+require File.expand_path('../../spec_cli', __FILE__)
+Crossyglot::SpecRTCLI.new(PuzRoundTripper::Matcher, PuzRoundTripper::ROUNDTRIP_INVALIDS)

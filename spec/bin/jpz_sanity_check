@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require File.expand_path('../../spec_cli', __FILE__)
+Crossyglot::SpecRTCLI.new(JpzSanityCheck::Matcher)
